@@ -37,7 +37,7 @@ function readLine (obj, line) {
   return obj;
 }
 
-const URL = 'http://localhost:8080';
+const URL = 'https://raw.githubusercontent.com/zerodois/webgl/master';
 axios.get(URL + '/models/deer.obj')
   .then(function (response) {
     var v = format(response.data)
