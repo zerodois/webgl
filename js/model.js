@@ -5,7 +5,7 @@ function format (data) {
   var vMin = vec4(vec.min.x, vec.min.y, vec.min.z, 1)
 
   var midPoint = add(vMin, vMax).map(item => item * 0.5);
-  var invdiag = 1 / length( subtract(vMax, vMin) );
+  var invdiag = 1.5 / length( subtract(vMax, vMin) );
   
   vec.vertices.forEach((item, i) => {
     vec.vertices [i] = subtract(item, midPoint).map(el => el * invdiag)

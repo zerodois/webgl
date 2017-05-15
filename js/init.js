@@ -1,4 +1,5 @@
-
+var W = window.innerWidth;
+var H = window.innerHeight;
 var canvas;
 var gl;
 
@@ -17,6 +18,8 @@ var thetaLoc;
 function init()
 {
     canvas = document.getElementById( "gl-canvas" );
+    canvas.width = Math.min( W/4, H/4 ) * 3;
+    canvas.height = canvas.width;
     
     gl = WebGLUtils.setupWebGL( canvas );
     if ( !gl ) { alert( "WebGL isn't available" ); }
