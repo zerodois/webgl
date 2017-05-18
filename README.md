@@ -1,4 +1,7 @@
 # WebGL project
+<p align="center">
+  <img src="https://raw.githubusercontent.com/zerodois/webgl/master/webgl.png" align="center" height="200">
+</p>
 
 Bem vindo ao projeto WebGL!
 
