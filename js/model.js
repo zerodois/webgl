@@ -37,12 +37,11 @@ function readLine (obj, line) {
   return obj;
 }
 
-const URL = 'https://raw.githubusercontent.com/zerodois/webgl/master';
-axios.get(URL + '/models/deer.obj')
+axios.get(app.server + '/models/deer.obj')
   .then(function (response) {
     var v = format(response.data)
     points = v
-    colors = colorize()//v.map(el => [ 0.5, 0.5, 0.5, 1.0 ])
+    colors = colorize()
     init()
   })
   .catch(function (error) {
@@ -50,11 +49,6 @@ axios.get(URL + '/models/deer.obj')
   })
 
 function colorize () {
-  var size = 0.2 / points.length
-  var color = 0
-  return points.map(item => {
-    let a = [ 0.83 - color, 0.82 - color, 0.65 - color, 1 ]
-    color += size
-    return a
-  })
+  var size = 0.2 / points.length, color = 0
+  return points.map(item => [ 0.83 - color, 0.82 - color, 0.65 - (color += size) - size, 1 ])
 }
