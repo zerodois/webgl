@@ -17,6 +17,7 @@ function format (data) {
 function readLine (obj, line) {
   arr = line.split(' ').map(e => e.split('/')[0]).filter(el => el != "")
   var X = Number(arr[1]), Y = Number(arr[2]), Z = Number(arr[3]);
+
   if (arr[0] == 'v') {
     reduce (obj, 'max', { x: X, y: Y, z: Z }, Math.max)
     reduce (obj, 'min', { x: X, y: Y, z: Z }, Math.min)
@@ -24,6 +25,7 @@ function readLine (obj, line) {
   }
   else if (arr[0] == 'f')
     obj.points.push(vec3(X, Y, Z))
+  
   return obj;
 }
 
@@ -42,7 +44,6 @@ function colorize () {
 
 axios.get(app.server + '/models/deer.obj')
   .then(function (response) {
-    console.log('OK')
     var v = format(response.data)
     points = v
     colors = colorize()
