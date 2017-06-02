@@ -5,7 +5,7 @@
 
 Bem vindo ao projeto WebGL!
 
-Este projeto está em desenvolvimento e tem a proposta de criar uma aplicação utilizando OpenGL com Javascript, utilizando o WebGL.
+Este projeto está em desenvolvimento e tem a proposta de criar uma aplicação utilizando OpenGL com Javascript, utilizando o WebGL e a biblioteca salva-vidas Three.js.
 Todas as instruções do projeto, como executá-lo(muito embora, como você deve supor, é bem simples), referências e afins, encontram-se na nossa [wiki](https://github.com/zerodois/webgl/wiki).
 
 Qualquer dúvida pode contactar qualquer um da "galera" integrante do projeto, ou se prefere mudar o que quiser e nos mandar aquele pull request supimpa, fique a vontade :D
