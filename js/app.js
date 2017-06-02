@@ -37,56 +37,57 @@ function APP (FLOOR) {
   mesh.position.y = FLOOR;
   this.scene.add( mesh );
 
-
   //Objects
   this.fn = () => {};
   this.arr = [];
 }
-
 function onLoad () {
 }
 function onProgress (url, item, total) {
-}
-
-APP.prototype.append = function (object) {
-  this.arr.push(object);
-  this.scene.add(object);
 }
 
 APP.prototype.draw = function (fn) {
   this.fn = fn;
 }
 
-APP.prototype.load = function (url, scale, callback, shader) {
+APP.prototype.texture = function (url, fn) {
+  var texture = new THREE.Texture()
+  var loader = new THREE.ImageLoader( this.manager )
+  loader.load( url, function ( image ) {
+    texture.image = image;
+    texture.needsUpdate = true;
+    if (fn)
+      fn(texture)
+  });
+  return texture
+}
+
+APP.prototype.load = function (url, scale, callback) {
   var loader = new THREE.OBJLoader(this.manager);
-  loader.crossOrigin = '*';
   var self = this;
   loader.load( url, obj => {
     obj.scale.set(scale, scale, scale)
     obj.position.set(0, this.floor, 0)
-    //Call shader
-    if (shader)
-      return shader(obj, this.scene)
-    self.scene.add(obj)
     if (callback != undefined)
       callback(obj);
+    self.scene.add(obj)
   });
 }
 
 APP.prototype.render =  function () {
-  this.renderer = new THREE.WebGLRenderer();
-  this.renderer.setClearColor( 0xffffff );
-  this.renderer.setPixelRatio( window.devicePixelRatio );
-  this.renderer.setSize( window.innerWidth, window.innerHeight );
-  document.body.appendChild( this.renderer.domElement );
+  var self = this
+  this.renderer = new THREE.WebGLRenderer()
+  this.renderer.setClearColor( 0xffffff )
+  this.renderer.setPixelRatio( window.devicePixelRatio )
+  this.renderer.setSize( window.innerWidth, window.innerHeight )
+  document.body.appendChild( this.renderer.domElement )
 
-  const self = this;
   const render = () => {
-    requestAnimationFrame( render );
-    this.fn();
-    self.renderer.render( self.scene, self.camera ); 
+    requestAnimationFrame( render )
+    this.fn()
+    self.renderer.render( self.scene, self.camera )
   }
-  render();
+  render()
 }
 
 //Draw floor
