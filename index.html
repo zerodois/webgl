@@ -1,74 +1,43 @@
-<html>
-	<style>
-		body,
-		html {
-			padding: 0;
-			margin: 0;
-			text-align: center;
-			width: 100%;
-			float: left;
-		}		
-		#gl-canvas {
-			margin: auto
-		}
-	</style>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js - pointerlock controls</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link rel="stylesheet" href="css/main.css">
+	</head>
+	<body>
+		<div id="blocker">
+			<div id="instructions">
+				<span style="font-size:40px">Click to play</span>
+				<br />
+				(W, A, S, D = Move, SPACE = Jump, MOUSE = Look around)
+			</div>
+		</div>
+	</body>
 
 	<script id="vertex-shader" type="x-shader/x-vertex">
-		attribute vec4 vPosition;
-		attribute vec4 vColor;
-		varying vec4 fColor;
-
-		uniform vec3 theta;
-
-		void main () {
-			// Compute the sines and cosines of theta for each of
-			// the three axes in one computation.
-			vec3 angles = radians( theta );
-			vec3 c = cos( angles );
-			vec3 s = sin( angles );
-
-			// Remeber: these matrices are column-major
-			mat4 rx = mat4( 1.0,  0.0,  0.0, 0.0,
-											0.0,  c.x,  s.x, 0.0,
-											0.0, -s.x,  c.x, 0.0,
-											0.0,  0.0,  0.0, 1.0  );
-
-			mat4 ry = mat4( c.y, 0.0, -s.y, 0.0,
-											0.0, 1.0,  0.0, 0.0,
-											s.y, 0.0,  c.y, 0.0,
-											0.0, 0.0,  0.0, 1.0  );
-
-			mat4 rz = mat4( c.z, -s.z, 0.0, 0.0,
-											s.z,  c.z, 0.0, 0.0,
-											0.0,  0.0, 1.0, 0.0,
-											0.0,  0.0, 0.0, 1.0  );
-
-			fColor = vColor;
-			gl_Position = rz * ry * rx * vPosition;
+		varying vec3 vNormal;
+		void main() {
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+			vNormal = normal;
 		}
 	</script>
 
 	<script id="fragment-shader" type="x-shader/x-fragment">
 		precision mediump float;
-		varying vec4 fColor;
-
-		void main ()	{
-			gl_FragColor = fColor;
+		varying vec3 vNormal;
+		void main() {
+			gl_FragColor = vec4( 0.5 * normalize(vNormal) + 0.5, 1.0 );
 		}
 	</script>
 
-	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-	<script type="text/javascript" src="lib/webgl-utils.js"></script>
-	<script type="text/javascript" src="lib/initShaders.js"></script>
-	<script type="text/javascript" src="lib/MV.js"></script>
-	<script type="text/javascript" src="webgl.js"></script>
-	<script type="text/javascript" src="js/utils.js"></script>
-	<script type="text/javascript" src="js/init.js"></script>
-	<script type="text/javascript" src="js/model.js"></script>
-
-	<body>
-		<canvas id="gl-canvas">
-			Oops ... your browser doesn't support the HTML5 canvas element
-		</canvas>
-	</body>
+	<script src="lib/three.js/three.min.js"></script>
+	<!--<script src="https://threejs.org/examples/js/libs/stats.min.js"></script>-->
+	<script src="lib/three.js/OBJLoader.js"></script>
+	<script src="lib/three.js/PointerLockControls.js"></script>
+	<script src="js/app.js"></script>
+	<script src="js/pointerlock.js"></script>
+	<script src="js/keyboard.js"></script>
+	<script src="js/main.js"></script>
 </html>
