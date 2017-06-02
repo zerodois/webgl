@@ -4,28 +4,29 @@ var geometry, material, mesh;
 var blocker = document.getElementById( 'blocker' );
 var instructions = document.getElementById( 'instructions' );
 
-app.load('models/wolf.obj', 0.05)
+app.load('models/wolf.obj', 0.05);
 app.load('models/pomo.obj', 1, obj => {
   obj.position.setY(10).setX(10)
-})
+});
 app.load('models/witch.obj', 1, obj => {
   obj.position.setX(-10)
-})
+}, shader);
 
-app.load('models/deer.obj', 0.01, undefined, shader)
+app.load('models/deer.obj', 0.01, obj => {
+  obj.position.setX(10)
+}, shader);
 
 function shader (obj, scene) {
   var material = new THREE.ShaderMaterial( {
     vertexShader: document.getElementById( 'vertex-shader' ).textContent,
     fragmentShader: document.getElementById( 'fragment-shader' ).textContent
   });
-  obj.position.setX(10)
 
   obj.traverse(function (child) {
     child.material = material;
   });
 
-  scene.add( obj );
+  scene.add(obj);
 }
 
 var pointerlock = new Pointerlock();
@@ -53,8 +54,9 @@ var prevTime = performance.now();
 var velocity = new THREE.Vector3();
 
 controls = new THREE.PointerLockControls(app.camera);
+controls.getObject().translateZ(30);
 app.scene.add(controls.getObject());
-app.bottom(true);
+app.bottom(false);
 KeyboardMove.aswd();
 
 app.draw(() => {
@@ -77,5 +79,14 @@ app.draw(() => {
   controls.getObject().position.y = 10;
   prevTime = time;
 });
+
+window.addEventListener( 'resize', onWindowResize, false );
+
+function onWindowResize(){
+  app.camera.aspect = window.innerWidth / window.innerHeight;
+  app.camera.updateProjectionMatrix();
+
+  app.renderer.setSize( window.innerWidth, window.innerHeight );
+}
 
 app.render();
