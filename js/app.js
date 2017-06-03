@@ -1,7 +1,7 @@
 function APP (FLOOR) {
   // Scene
   this.scene = new THREE.Scene();
-  this.scene.fog = new THREE.Fog( 0xaacaff, 0, 750 );
+  this.scene.fog = new THREE.Fog( 0x8cedf7, 0, 750 );
   this.floor = FLOOR || 0;
 
   // Camera
@@ -29,51 +29,55 @@ function APP (FLOOR) {
   this.fn = () => {};
   this.arr = [];
 }
-
 function onLoad () {
 }
 function onProgress (url, item, total) {
-}
-
-APP.prototype.append = function (object) {
-  this.arr.push(object);
-  this.scene.add(object);
 }
 
 APP.prototype.draw = function (fn) {
   this.fn = fn;
 }
 
+APP.prototype.texture = function (url, fn) {
+  var texture = new THREE.Texture()
+  var loader = new THREE.ImageLoader( this.manager )
+  loader.load( url, function ( image ) {
+    texture.image = image;
+    texture.needsUpdate = true;
+    if (fn)
+      fn(texture)
+  });
+  return texture
+}
+
 APP.prototype.load = function (url, scale, callback, shader) {
-  var loader = new THREE.OBJLoader(this.manager)
-  loader.crossOrigin = '*'
-  var self = this
+  var loader = new THREE.OBJLoader(this.manager);
+  var self = this;
   loader.load( url, obj => {
     obj.scale.set(scale, scale, scale)
     obj.position.set(0, this.floor, 0)
-    //Call shader
     if (shader)
-      shader(obj, this.scene)
-    self.scene.add(obj)
+      shader(obj)
     if (callback != undefined)
-      callback(obj)
-  })
+      callback(obj);
+    self.scene.add(obj)
+  });
 }
 
 APP.prototype.render =  function () {
-  this.renderer = new THREE.WebGLRenderer();
-  this.renderer.setClearColor( 0xcee1ff );
-  this.renderer.setPixelRatio( window.devicePixelRatio );
-  this.renderer.setSize( window.innerWidth, window.innerHeight );
-  document.body.appendChild( this.renderer.domElement );
+  var self = this
+  this.renderer = new THREE.WebGLRenderer()
+  this.renderer.setClearColor( 0x9ef6ff )
+  this.renderer.setPixelRatio( window.devicePixelRatio )
+  this.renderer.setSize( window.innerWidth, window.innerHeight )
+  document.body.appendChild( this.renderer.domElement )
 
-  const self = this;
   const render = () => {
-    requestAnimationFrame( render );
-    this.fn();
-    self.renderer.render( self.scene, self.camera );
+    requestAnimationFrame( render )
+    this.fn()
+    self.renderer.render( self.scene, self.camera )
   }
-  render();
+  render()
 }
 
 //Draw floor

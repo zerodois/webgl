@@ -12,25 +12,29 @@ app.load('models/pomo.obj', 1, obj => {
   pomo = obj
 });
 
-app.load('models/witch.obj', 1, obj => {
-  obj.position.setX(-10)
-}, shader);
+app.texture('models/witch-fire.png', text => {
+  app.load('models/witch.obj', 1, obj => {
+    obj.position.setX(-10)
+    obj.traverse( function ( child ) {
+      if ( child instanceof THREE.Mesh )
+        child.material.map = text;
+    });
+  })
+})
 
 app.load('models/deer.obj', 0.01, obj => {
   obj.position.setX(10)
 }, shader);
 
-function shader (obj, scene) {
-  var material = new THREE.ShaderMaterial( {
+
+function shader (obj) {
+  var material = new THREE.ShaderMaterial({
     vertexShader: document.getElementById( 'vertex-shader' ).textContent,
     fragmentShader: document.getElementById( 'fragment-shader' ).textContent
   });
-
   obj.traverse(function (child) {
     child.material = material;
   });
-
-  scene.add(obj);
 }
 
 var pointerlock = new Pointerlock();
