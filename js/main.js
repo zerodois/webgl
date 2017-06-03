@@ -65,53 +65,27 @@ instructions.addEventListener( 'click', function ( event ) {
 }, false )
 pointerlock.onError(() => {})
 
-
-var controlsEnabled = false
-var prevTime = performance.now()
-var velocity = new THREE.Vector3()
-
 controls = new THREE.PointerLockControls(app.camera)
 controls.getObject().translateZ(30)
 app.scene.add(controls.getObject())
 app.bottom(false)
 KeyboardMove.aswd()
 
-var signal = [ 1, -1 ]
-var inc = [ 0.4, 0.1, 0.4 ]
-var radio = 10
-
-var vecLook = new THREE.Vector3()
-
-var curves = [new THREE.CubicBezierCurve3(
-                new THREE.Vector3( 28, 20, 8 ),
-                new THREE.Vector3( -85, 20, -60 ),
-                new THREE.Vector3( 117, 20, 4 ),
-                new THREE.Vector3( -5, 20, 3 )
-              ),
-              new THREE.CubicBezierCurve3(
-                new THREE.Vector3( -5, 20, 3 ),
-                new THREE.Vector3( -129, 20, 3 ),
-                new THREE.Vector3( 90, 20, 71 ),
-                new THREE.Vector3( 28, 20, 8 )
-              )]
-
-var atCurve = 0
-var curveTime = 0
-var curveInc = 0.01
-
-var startSpeed = 800.00;
-
 app.draw(() => {
   if (!controlsEnabled)
     return
 
-  animatePommel()
-  animatePseudoPommel()
+  movePommel()
+  movePseudoPommel()
   moveCamera()
   
 })
 
-function animatePommel() {
+var signal = [ 1, -1 ]
+var inc = [ 0.4, 0.1, 0.4 ]
+var radio = 10
+
+function movePommel() {
   if (Math.abs(pommel.position.x) <= Math.abs(pommel.position.z)) {
     pommel.position.x += inc[0] * signal[1]
     pommel.position.z = Math.sqrt(radio * radio - Math.pow(pommel.position.x, 2)) * signal[1]
@@ -129,11 +103,34 @@ function animatePommel() {
     signal[1] *= -1
 }
 
-function animatePseudoPommel() {
+var curves = [new THREE.CubicBezierCurve3(
+                new THREE.Vector3( 28, 20, 8 ),
+                new THREE.Vector3( -85, 20, -60 ),
+                new THREE.Vector3( 117, 20, 4 ),
+                new THREE.Vector3( -5, 20, 3 )
+              ),
+              new THREE.CubicBezierCurve3(
+                new THREE.Vector3( -5, 20, 3 ),
+                new THREE.Vector3( -129, 20, 3 ),
+                new THREE.Vector3( 90, 20, 71 ),
+                new THREE.Vector3( 28, 20, 8 )
+              )]
+
+var atCurve = 0
+var curveTime = 0
+var curveInc = 0.02
+
+function movePseudoPommel() {
   pspommel.position.copy( curves[atCurve].getPointAt(curveTime += curveInc) )
-  if ( Math.abs(curveTime-0.99) < 0.001 )
+  if ( Math.abs(curveTime-0.99) < 0.01 )
     curveTime = 0, atCurve ^= 1
 }
+
+var controlsEnabled = false
+var prevTime = performance.now()
+var velocity = new THREE.Vector3()
+
+var startSpeed = 800.00;
 
 function moveCamera() {
   var camera = controls.getObject()
@@ -149,17 +146,21 @@ function moveCamera() {
   velocity.x -= velocity.x * 10.0 * delta
   velocity.z -= velocity.z * 10.0 * delta
 
-  velocity.y -= 9.8 * 10.0 * delta
+  //velocity.y -= 9.8 * 10.0 * delta
   if ( KeyboardMove.keys.W ) velocity.z -= startSpeed * delta * Math.max(1, sft * 3)
   if ( KeyboardMove.keys.S ) velocity.z += startSpeed * delta
   if ( KeyboardMove.keys.A ) velocity.x -= startSpeed * delta
   if ( KeyboardMove.keys.D ) velocity.x += startSpeed * delta
-  if ( KeyboardMove.keys.Alt ) velocity.y -= startSpeed * 0.5 * delta
   
+  if ( KeyboardMove.keys.Alt )
+    velocity.y -= startSpeed * 0.5 * delta
+  else if (velocity.y < 0.0) // take it off to turn gravity on
+    velocity.y *= 0.92
+
   if ( KeyboardMove.keys.Spc )
     velocity.y += startSpeed * 0.4 * delta * Math.max(1, (velocity.y < 0.0) * 3)
   else if (velocity.y > 0)
-    velocity.y *= 0.96
+    velocity.y *= 0.95
 
   if (camera.y <= 50.00 && velocity.y < 0.0)
     velocity.y *= 0.8
