@@ -103,12 +103,24 @@ APP.prototype.bottom = function (wireframe) {
 
 // Create Pseudo-Pommel
 APP.prototype.sphere = function ( callback ) {
+  var listener = new THREE.AudioListener()
+  this.camera.add( listener )
+  
+  var sound = new THREE.PositionalAudio( listener )
+  var audioLoader = new THREE.AudioLoader()
+  audioLoader.load( 'sounds/hedwig.mp3', function( buffer ) {
+    sound.setBuffer( buffer )
+    sound.setRefDistance( 15 )
+    sound.play()
+  })
+
   var geometry = new THREE.SphereGeometry( 1, 6, 6 )
   var material = new THREE.MeshBasicMaterial( {color: 0x000000} )
   var obj = new THREE.Mesh( geometry, material )
   if (callback != undefined)
     callback(obj)
   this.scene.add(obj)
+  obj.add( sound )
 }
 
 APP.prototype.colorize = function (obj, colors) {

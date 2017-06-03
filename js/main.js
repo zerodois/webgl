@@ -118,7 +118,7 @@ var curves = [new THREE.CubicBezierCurve3(
 
 var atCurve = 0
 var curveTime = 0
-var curveInc = 0.02
+var curveInc = 0.01
 
 function movePseudoPommel() {
   pspommel.position.copy( curves[atCurve].getPointAt(curveTime += curveInc) )
