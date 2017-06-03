@@ -4,6 +4,8 @@ var geometry, material, mesh
 var blocker = document.getElementById( 'blocker' )
 var instructions = document.getElementById( 'instructions' )
 var pommel, pspommel
+var camStart = new THREE.Vector3( 0, 10, 30 )
+var camStLookAt = new THREE.Vector3( 0, 0, 0 )
 
 app.load('models/wolf.obj', 0.05)
 
@@ -78,6 +80,8 @@ var signal = [ 1, -1 ]
 var inc = [ 0.4, 0.1, 0.4 ]
 var radio = 10
 
+var vecLook = new THREE.Vector3()
+
 var curves = [new THREE.CubicBezierCurve3(
                 new THREE.Vector3( 28, 20, 8 ),
                 new THREE.Vector3( -85, 20, -60 ),
@@ -95,11 +99,19 @@ var atCurve = 0
 var curveTime = 0
 var curveInc = 0.01
 
+var startSpeed = 800.00;
+
 app.draw(() => {
   if (!controlsEnabled)
     return
 
-  // Pommel 1
+  animatePommel()
+  animatePseudoPommel()
+  moveCamera()
+  
+})
+
+function animatePommel() {
   if (Math.abs(pommel.position.x) <= Math.abs(pommel.position.z)) {
     pommel.position.x += inc[0] * signal[1]
     pommel.position.z = Math.sqrt(radio * radio - Math.pow(pommel.position.x, 2)) * signal[1]
@@ -115,31 +127,54 @@ app.draw(() => {
     signal[0] *= -1
   if (Math.abs(pommel.position.z) <= inc[2] * 0.5)
     signal[1] *= -1
+}
 
-  // Pseudo-pommel 2
-  pspommel.position.copy(curves[atCurve].getPointAt(curveTime += curveInc))
-
-  if (Math.abs(curveTime-0.99) < 0.001)
+function animatePseudoPommel() {
+  pspommel.position.copy( curves[atCurve].getPointAt(curveTime += curveInc) )
+  if ( Math.abs(curveTime-0.99) < 0.001 )
     curveTime = 0, atCurve ^= 1
-  
+}
 
-  // Camera
+function moveCamera() {
+  var camera = controls.getObject()
+
+  if ( KeyboardMove.keys.Hm ) {
+    camera.position.copy( camStart )
+    velocity.x = velocity.y = velocity.z = 0
+  }
+
   var time = performance.now()
   var delta = ( time - prevTime ) / 1000
+  var sft = KeyboardMove.keys.Sft
   velocity.x -= velocity.x * 10.0 * delta
   velocity.z -= velocity.z * 10.0 * delta
-  velocity.y -= 9.8 * 100.0 * delta // 100.0 = mass
-  if ( KeyboardMove.keys.W ) velocity.z -= 400.0 * delta
-  if ( KeyboardMove.keys.S ) velocity.z += 400.0 * delta
-  if ( KeyboardMove.keys.A ) velocity.x -= 400.0 * delta
-  if ( KeyboardMove.keys.D ) velocity.x += 400.0 * delta
+
+  velocity.y -= 9.8 * 10.0 * delta
+  if ( KeyboardMove.keys.W ) velocity.z -= startSpeed * delta * Math.max(1, sft * 3)
+  if ( KeyboardMove.keys.S ) velocity.z += startSpeed * delta
+  if ( KeyboardMove.keys.A ) velocity.x -= startSpeed * delta
+  if ( KeyboardMove.keys.D ) velocity.x += startSpeed * delta
+  if ( KeyboardMove.keys.Alt ) velocity.y -= startSpeed * 0.5 * delta
   
-  controls.getObject().translateX( velocity.x * delta )
-  controls.getObject().translateY( velocity.y * delta )
-  controls.getObject().translateZ( velocity.z * delta )
-  controls.getObject().position.y = 10
+  if ( KeyboardMove.keys.Spc )
+    velocity.y += startSpeed * 0.4 * delta * Math.max(1, (velocity.y < 0.0) * 3)
+  else if (velocity.y > 0)
+    velocity.y *= 0.96
+
+  if (camera.y <= 50.00 && velocity.y < 0.0)
+    velocity.y *= 0.8
+  
+  camera.translateX( velocity.x * delta );
+  camera.translateY( velocity.y * delta );
+  camera.translateZ( velocity.z * delta );
+
+  if ( camera.position.y < 10 ) {
+    velocity.y = 0;
+    camera.position.y = 10;
+  }
+
   prevTime = time
-})
+}
 
 window.addEventListener( 'resize', onWindowResize, false )
 
