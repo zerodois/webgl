@@ -3,11 +3,15 @@ var controls;
 var geometry, material, mesh;
 var blocker = document.getElementById( 'blocker' );
 var instructions = document.getElementById( 'instructions' );
+var pomo
 
 app.load('models/wolf.obj', 0.05);
+
 app.load('models/pomo.obj', 1, obj => {
   obj.position.setY(10).setX(10)
+  pomo = obj
 });
+
 app.load('models/witch.obj', 1, obj => {
   obj.position.setX(-10)
 }, shader);
@@ -59,9 +63,29 @@ app.scene.add(controls.getObject());
 app.bottom(false);
 KeyboardMove.aswd();
 
+var signal = [ 1, -1 ]
+var inc = [ 0.4, 0.1, 0.4 ]
+var radio = 10
+
 app.draw(() => {
   if (!controlsEnabled)
     return;
+
+  if (Math.abs(pomo.position.x) <= Math.abs(pomo.position.z)) {
+    pomo.position.x += inc[0] * signal[1];
+    pomo.position.z = Math.sqrt(radio * radio - Math.pow(pomo.position.x, 2)) * signal[1];
+  }
+  else {
+    pomo.position.z -= inc[2] * signal[0];
+    pomo.position.x = Math.sqrt(radio * radio - Math.pow(pomo.position.z, 2)) * signal[0];
+  }
+
+  pomo.position.y -= inc[1] * signal[1];
+
+  if (Math.abs(pomo.position.x) <= inc[0] * 0.5)
+    signal[0] *= -1;
+  if (Math.abs(pomo.position.z) <= inc[2] * 0.5)
+    signal[1] *= -1;
 
   var time = performance.now();
   var delta = ( time - prevTime ) / 1000;
