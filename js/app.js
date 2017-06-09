@@ -1,15 +1,18 @@
-function APP (FLOOR) {
+function APP (WALLWIDTH, WALLHEIGHT) {
   // Scene
   this.scene = new THREE.Scene()
-  this.scene.fog = new THREE.Fog( 0x8cedf7, 0, 750 )
-  this.floor = FLOOR || 0
+  this.floor = 0
+
+  // Wall
+  this.wallWidth = WALLWIDTH || 5000
+  this.wallHeight = WALLHEIGHT || 400
 
   // Camera
-  var fieldOfView = 75,
+  var viewAngle = 75,
       aspectRatio = window.innerWidth/window.innerHeight,
       near = 0.4,
-      far = 1000
-  this.camera = new THREE.PerspectiveCamera( fieldOfView, aspectRatio, near, far )
+      far = 20000
+  this.camera = new THREE.PerspectiveCamera( viewAngle, aspectRatio, near, far )
   this.camera.updateProjectionMatrix()
   this.camera.position.z = 0
 
@@ -24,6 +27,24 @@ function APP (FLOOR) {
   // this.light = new THREE.DirectionalLight( 0xffffff )
   // this.light.position.set( 1, 0, 1 ).normalize()
   this.scene.add( this.light )
+
+  // Scene background
+  // http://www.custommapmakers.org/skyboxes.php
+  var imagePrefix = "images/background/hills2_"
+	var directions  = ["rt", "lf", "up", "dn", "bk", "ft"]
+	var imageSuffix = ".png"
+  
+  var urls = [];
+	for (var i = 0; i < 6; i++)
+		urls.push( imagePrefix + directions[i] + imageSuffix )
+
+  var reflectionCube = new THREE.CubeTextureLoader().load( urls );
+  reflectionCube.format = THREE.RGBFormat;
+  this.scene.background = reflectionCube;
+
+  // Axes lines
+  var axes = new THREE.AxisHelper(100);
+	this.scene.add( axes );
 
   // Objects
   this.fn = () => {}
@@ -69,7 +90,7 @@ APP.prototype.render =  function () {
   this.renderer.setPixelRatio( window.devicePixelRatio )
   this.renderer.setSize( window.innerWidth, window.innerHeight )
   document.body.appendChild( this.renderer.domElement )
-
+  
   const render = () => {
     requestAnimationFrame( render )
     this.fn()
@@ -78,27 +99,48 @@ APP.prototype.render =  function () {
   render()
 }
 
+// Draw scenario
+APP.prototype.scenario = function () {
+  this.bottom()
+  this.walls(0, -this.wallWidth/2, 0)
+  this.walls(0, this.wallWidth/2, Math.PI)
+  this.walls(-this.wallWidth/2, 0, Math.PI/2)
+  this.walls(this.wallWidth/2, 0, -Math.PI/2)
+}
+
 //Draw floor
-APP.prototype.bottom = function (wireframe) {
-  var geometry = new THREE.PlaneGeometry( 2000, 2000, 100, 100 )
+APP.prototype.bottom = function () {
+  var geometry = new THREE.PlaneGeometry( 20000, 20000, 100, 100 )
   geometry.rotateX( - Math.PI / 2 )
 
-  for ( var i = 0, l = geometry.vertices.length; i < l; i ++ ) {
-    var vertex = geometry.vertices[ i ]
-    vertex.x += Math.random() * 20 - 10
-    // vertex.y += Math.random() * 2
-    vertex.z += Math.random() * 20 - 10
-  }
+  var textureLoader = new THREE.TextureLoader();
+  var texture = textureLoader.load('images/misc/grass.png');
+  texture.anisotropy = 4;
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set( 800, 800 );
+  var material = new THREE.MeshBasicMaterial({map: texture});
 
-  APP.prototype.colorize(geometry, {
-    c1: { r: 22, g: 145, b: 17 },
-    c2: { r: 13, g: 119, b: 8 },
-    c3: { r: 32, g: 117, b: 28 }
-  })
-
-  material = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors, wireframe } )
-  mesh = new THREE.Mesh( geometry, material )
+  var mesh = new THREE.Mesh( geometry, material )
   this.scene.add( mesh )
+}
+
+// Draw a wall
+APP.prototype.walls = function (x, z, angle) {
+  var geometry = new THREE.PlaneGeometry( this.wallWidth, this.wallHeight, 100, 100 )
+  geometry.rotateY( angle )
+
+  var textureLoader = new THREE.TextureLoader();
+  var texture = textureLoader.load('images/misc/wall.jpg');
+  texture.anisotropy = 1;
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set( 20, 2 );
+  var material = new THREE.MeshBasicMaterial({map: texture});
+  
+  var mesh = new THREE.Mesh( geometry, material )
+  this.scene.add( mesh )
+  mesh.position.setX(x).setY(100).setZ(z)
 }
 
 // Create Pseudo-Pommel
@@ -107,6 +149,7 @@ APP.prototype.sphere = function ( callback ) {
   this.camera.add( listener )
   
   var sound = new THREE.PositionalAudio( listener )
+  sound.setLoop( 1 )
   var audioLoader = new THREE.AudioLoader()
   audioLoader.load( 'sounds/hedwig.mp3', function( buffer ) {
     sound.setBuffer( buffer )
@@ -121,15 +164,4 @@ APP.prototype.sphere = function ( callback ) {
     callback(obj)
   this.scene.add(obj)
   obj.add( sound )
-}
-
-APP.prototype.colorize = function (obj, colors) {
-  var c1 = colors.c1, c2 = colors.c2, c3 = colors.c3
-
-  for ( var i = 0, l = obj.faces.length; i < l; i ++ ) {
-    var face = obj.faces[ i ]
-    face.vertexColors[ 0 ] = new THREE.Color(c1.r/256, c1.g/256, c1.b/256)
-    face.vertexColors[ 1 ] = new THREE.Color(c2.r/256, c2.g/256, c3.b/256)
-    face.vertexColors[ 2 ] = new THREE.Color(c3.r/256, c3.g/256, c3.b/256)
-  }
 }

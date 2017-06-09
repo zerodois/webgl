@@ -9,21 +9,25 @@ var camStLookAt = new THREE.Vector3( 0, 0, 0 )
 
 app.load('models/wolf.obj', 0.05)
 
+var initialBCP = new THREE.Vector3( 200*Math.random()*(Math.random() > 0.5 ? 1 : -1), 20, 200*Math.random()*(Math.random() > 0.5 ? 1 : -1) )
+var finalBCP = new THREE.Vector3( 200*Math.random()*(Math.random() > 0.5 ? 1 : -1), 20, 200*Math.random()*(Math.random() > 0.5 ? 1 : -1) )
+
 app.load('models/pommel.obj', 1, obj => {
   obj.position.setX(10).setY(10)
-  pommel = obj
+  pspommel = obj
 })
 
 // Pseudo-pommel
 app.sphere( obj => {
-  obj.position.setX(28).setY(20).setZ(8)
-  pspommel = obj
+  obj.position.setX(initialBCP.x).setY(initialBCP.y).setZ(initialBCP.z)
+  pommel = obj
 })
 
-
+var witch
 app.texture('models/witch-fire.png', text => {
   app.load('models/witch.obj', 1, obj => {
     obj.position.setX(-10)
+    witch = obj
     obj.traverse( function ( child ) {
       if ( child instanceof THREE.Mesh )
         child.material.map = text
@@ -68,72 +72,78 @@ pointerlock.onError(() => {})
 controls = new THREE.PointerLockControls(app.camera)
 controls.getObject().translateZ(30)
 app.scene.add(controls.getObject())
-app.bottom(false)
+app.scenario()
 KeyboardMove.aswd()
 
-app.draw(() => {
-  if (!controlsEnabled)
-    return
+var controlsEnabled = false
 
-  movePommel()
+app.draw(() => {
+  if (!controlsEnabled) {
+    prevTime = performance.now()
+    return
+  }
+
   movePseudoPommel()
+  movePommel()
   moveCamera()
-  
 })
 
 var signal = [ 1, -1 ]
 var inc = [ 0.4, 0.1, 0.4 ]
 var radio = 10
 
-function movePommel() {
-  if (Math.abs(pommel.position.x) <= Math.abs(pommel.position.z)) {
-    pommel.position.x += inc[0] * signal[1]
-    pommel.position.z = Math.sqrt(radio * radio - Math.pow(pommel.position.x, 2)) * signal[1]
+function movePseudoPommel() {
+  if (Math.abs(pspommel.position.x) <= Math.abs(pspommel.position.z)) {
+    pspommel.position.x += inc[0] * signal[1]
+    pspommel.position.z = Math.sqrt(radio * radio - Math.pow(pspommel.position.x, 2)) * signal[1]
   }
   else {
-    pommel.position.z -= inc[2] * signal[0]
-    pommel.position.x = Math.sqrt(radio * radio - Math.pow(pommel.position.z, 2)) * signal[0]
+    pspommel.position.z -= inc[2] * signal[0]
+    pspommel.position.x = Math.sqrt(radio * radio - Math.pow(pspommel.position.z, 2)) * signal[0]
   }
 
-  pommel.position.y -= inc[1] * signal[1]
+  pspommel.position.y -= inc[1] * signal[1]
 
-  if (Math.abs(pommel.position.x) <= inc[0] * 0.5)
+  if (Math.abs(pspommel.position.x) <= inc[0] * 0.5)
     signal[0] *= -1
-  if (Math.abs(pommel.position.z) <= inc[2] * 0.5)
+  if (Math.abs(pspommel.position.z) <= inc[2] * 0.5)
     signal[1] *= -1
 }
 
 var curves = [new THREE.CubicBezierCurve3(
-                new THREE.Vector3( 28, 20, 8 ),
+                initialBCP,
                 new THREE.Vector3( -85, 20, -60 ),
                 new THREE.Vector3( 117, 20, 4 ),
-                new THREE.Vector3( -5, 20, 3 )
+                finalBCP
               ),
               new THREE.CubicBezierCurve3(
-                new THREE.Vector3( -5, 20, 3 ),
+                finalBCP,
                 new THREE.Vector3( -129, 20, 3 ),
                 new THREE.Vector3( 90, 20, 71 ),
-                new THREE.Vector3( 28, 20, 8 )
+                initialBCP
               )]
 
 var atCurve = 0
 var curveTime = 0
 var curveInc = 0.01
 
-function movePseudoPommel() {
-  pspommel.position.copy( curves[atCurve].getPointAt(curveTime += curveInc) )
+function movePommel() {
+  pommel.position.copy( curves[atCurve].getPointAt(curveTime += curveInc) )
   if ( Math.abs(curveTime-0.99) < 0.01 )
     curveTime = 0, atCurve ^= 1
+
 }
 
-var controlsEnabled = false
 var prevTime = performance.now()
 var velocity = new THREE.Vector3()
 
-var startSpeed = 800.00;
+var startSpeed = 800.00
+var maxCoord = [ 50.00, 450.00, 50.00 ]
 
-function moveCamera() {
+function moveCamera() {  
   var camera = controls.getObject()
+
+  witch.rotateY( 0.01 )
 
   if ( KeyboardMove.keys.Hm ) {
     camera.position.copy( camStart )
@@ -152,19 +162,21 @@ function moveCamera() {
   if ( KeyboardMove.keys.A ) velocity.x -= startSpeed * delta
   if ( KeyboardMove.keys.D ) velocity.x += startSpeed * delta
   
-  if ( KeyboardMove.keys.Alt )
+  if ( KeyboardMove.keys.C )
     velocity.y -= startSpeed * 0.5 * delta
   else if (velocity.y < 0.0) // take it off to turn gravity on
     velocity.y *= 0.92
 
   if ( KeyboardMove.keys.Spc )
     velocity.y += startSpeed * 0.4 * delta * Math.max(1, (velocity.y < 0.0) * 3)
-  else if (velocity.y > 0)
+  else if (velocity.y > 0.0)
     velocity.y *= 0.95
 
-  if (camera.y <= 50.00 && velocity.y < 0.0)
-    velocity.y *= 0.8
-  
+  if (camera.position.y >= maxCoord[1] && velocity.y > 0.0)
+    velocity.y = 0.0
+  else if (camera.position.y <= 30.00 && velocity.y < 0.0 || camera.position.y + 30.00 >= maxCoord[1] && velocity.y > 0.0)
+    velocity.y *= 0.9
+
   camera.translateX( velocity.x * delta );
   camera.translateY( velocity.y * delta );
   camera.translateZ( velocity.z * delta );
