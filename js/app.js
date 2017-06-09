@@ -43,8 +43,8 @@ function APP (WALLWIDTH, WALLHEIGHT) {
   this.scene.background = reflectionCube;
 
   // Axes lines
-  var axes = new THREE.AxisHelper(100);
-	this.scene.add( axes );
+  // var axes = new THREE.AxisHelper(100);
+	// this.scene.add( axes );
 
   // Objects
   this.fn = () => {}
