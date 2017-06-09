@@ -153,7 +153,7 @@ APP.prototype.sphere = function ( callback ) {
   var audioLoader = new THREE.AudioLoader()
   audioLoader.load( 'sounds/hedwig.mp3', function( buffer ) {
     sound.setBuffer( buffer )
-    sound.setRefDistance( 15 )
+    sound.setRefDistance( 45 )
     sound.play()
   })
 

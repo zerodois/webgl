@@ -1,4 +1,6 @@
-var app = new APP()
+var scenarioSize = 5000
+var scenarioHeight = 400
+var app = new APP( scenarioSize, scenarioHeight )
 var controls
 var geometry, material, mesh
 var blocker = document.getElementById( 'blocker' )
@@ -7,10 +9,10 @@ var pommel, pspommel
 var camStart = new THREE.Vector3( 0, 10, 30 )
 var camStLookAt = new THREE.Vector3( 0, 0, 0 )
 
-app.load('models/wolf.obj', 0.05)
+var initialBCP = new THREE.Vector3( randCoordinate(20), 20, randCoordinate(20) )
+var finalBCP
 
-var initialBCP = new THREE.Vector3( 200*Math.random()*(Math.random() > 0.5 ? 1 : -1), 20, 200*Math.random()*(Math.random() > 0.5 ? 1 : -1) )
-var finalBCP = new THREE.Vector3( 200*Math.random()*(Math.random() > 0.5 ? 1 : -1), 20, 200*Math.random()*(Math.random() > 0.5 ? 1 : -1) )
+app.load('models/wolf.obj', 0.05)
 
 app.load('models/pommel.obj', 1, obj => {
   obj.position.setX(10).setY(10)
@@ -48,6 +50,16 @@ function shader (obj) {
   obj.traverse(function (child) {
     child.material = material
   })
+}
+
+function randCoordinate (limit, pos) {
+  return (limit || scenarioSize) / 2 * Math.random() * (pos || Math.random() > 0.5 ? 1 : -1)
+}
+
+function randVec () {
+  return new THREE.Vector3( randCoordinate(),
+                            randCoordinate(scenarioHeight, true),
+                            randCoordinate() )
 }
 
 var pointerlock = new Pointerlock()
@@ -110,28 +122,28 @@ function movePseudoPommel() {
     signal[1] *= -1
 }
 
-var curves = [new THREE.CubicBezierCurve3(
-                initialBCP,
-                new THREE.Vector3( -85, 20, -60 ),
-                new THREE.Vector3( 117, 20, 4 ),
-                finalBCP
-              ),
-              new THREE.CubicBezierCurve3(
-                finalBCP,
-                new THREE.Vector3( -129, 20, 3 ),
-                new THREE.Vector3( 90, 20, 71 ),
-                initialBCP
-              )]
+var curve = new THREE.CubicBezierCurve3 (
+              initialBCP,
+              randVec(),
+              randVec(),
+              finalBCP = randVec()
+            )
 
-var atCurve = 0
 var curveTime = 0
-var curveInc = 0.01
+var curveInc = 0.0005
 
 function movePommel() {
-  pommel.position.copy( curves[atCurve].getPointAt(curveTime += curveInc) )
-  if ( Math.abs(curveTime-0.99) < 0.01 )
-    curveTime = 0, atCurve ^= 1
-
+  pommel.position.copy( curve.getPointAt(curveTime += curveInc) )
+  if ( Math.abs(curveTime-0.9996) < 0.0005 )
+  {
+    curveTime = 0
+    curve = new THREE.CubicBezierCurve3 (
+              inicialBCP = finalBCP,
+              randVec(),
+              randVec(),
+              finalBCP = randVec()
+            )
+  }
 }
 
 var prevTime = performance.now()
