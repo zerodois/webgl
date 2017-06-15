@@ -22,11 +22,22 @@ function APP (WALLWIDTH, WALLHEIGHT) {
   this.manager.onProgress = onProgress
 
   // Light
-  this.light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 0.75 )
+  this.light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 1 )
+  // this.light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 0.75 )
+  // this.light = new THREE.DirectionalLight( 0xff0000 )
   this.light.position.set( 0.5, 1, 0.75 )
-  // this.light = new THREE.DirectionalLight( 0xffffff )
   // this.light.position.set( 1, 0, 1 ).normalize()
   this.scene.add( this.light )
+
+  //Directional Light
+  this.directional = new THREE.DirectionalLight( 0xeeeeff )
+  this.directional.position.set( 0.5, 1, 0.75 )
+  this.directional.ambient = new THREE.Vector3(1.0 , 1.0 , 1.0)
+  this.directional.diffuse = new THREE.Vector3(1.0 , 1.0 , 1.0)
+  this.directional.specular = new THREE.Vector3(1.0 , 1.0 , 1.0)
+
+  // this.light.position.set( 1, 0, 1 ).normalize()
+  this.scene.add( this.directional )
 
   // Scene background
   // http://www.custommapmakers.org/skyboxes.php

@@ -39,14 +39,31 @@ app.texture('models/witch-fire.png', text => {
 
 app.load('models/deer.obj', 0.01, obj => {
   obj.position.setX(10)
+  obj.ambient =  new THREE.Vector3(0,  1, 0)
+  obj.diffuse =  new THREE.Vector3(0.7 , 0.7 , 0.7)
+  obj.specular = new THREE.Vector3(0.6 , 0.6 , 0.6)
+  obj.shininess = 100.0
+
   shader(obj)
 }, shader)
 
 function shader (obj) {
+  var uniforms = THREE.UniformsUtils.merge( [
+    THREE.UniformsLib[ "lights" ],
+    { lightPosition: { type:"v3", value: app.directional.position } },
+    { ambientProduct: { type:"v3", value: app.directional.ambient.multiply(obj.ambient) } },
+    { diffuseProduct: { type:"v3", value: app.directional.diffuse.multiply(obj.diffuse) } },
+    { specularProduct: { type:"v3", value: app.directional.specular.multiply(obj.specular) } },
+    { shininess: { type:"float", value: obj.shininess } }
+  ]);
+
   var material = new THREE.ShaderMaterial({
+    uniforms: uniforms,
     vertexShader: document.getElementById( 'vertex-shader' ).textContent,
-    fragmentShader: document.getElementById( 'fragment-shader' ).textContent
+    fragmentShader: document.getElementById( 'fragment-shader' ).textContent,
+    lights: true
   })
+
   obj.traverse(function (child) {
     child.material = material
   })

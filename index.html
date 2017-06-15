@@ -21,18 +21,41 @@
 	</body>
 
 	<script id="vertex-shader" type="x-shader/x-vertex">
-		varying vec3 vNormal;
+		struct DirectionalLight {
+			vec3 direction;
+			vec3 color;
+		};
+		uniform DirectionalLight directionalLights[ NUM_DIR_LIGHTS ];
+		uniform vec3 lightPosition;
+		uniform vec3 ambientProduct;
+		uniform vec3 diffuseProduct;
+		uniform vec3 specularProduct;
+		uniform float shininess;
+
+		varying vec3 vColor;
+		
 		void main() {
-			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-			vNormal = normal;
+			vec4 eyePosition = modelViewMatrix * vec4( position, 1.0 );
+			gl_Position = projectionMatrix * eyePosition;
+
+			vec3 N = normalize( normalMatrix * normal );
+			vec3 L = normalize( lightPosition.xyz - eyePosition.xyz );
+			vec3 E = normalize( - eyePosition.xyz );
+			vec3 R = reflect (-E, N);
+			float NdotL = dot (N, L);
+			float Kd = max (NdotL , 0.0) ;
+			float Ks = ( NdotL < 0.0) ? 0.0 : pow ( max ( dot (R, E), 0.0), shininess );
+			vec3 diffuse = Kd * diffuseProduct ;
+			vec3 specular = Ks * specularProduct ;
+			vec3 ambient = ambientProduct ;
+			vColor = ambient + diffuse + specular ;
 		}
 	</script>
 
 	<script id="fragment-shader" type="x-shader/x-fragment">
-		precision mediump float;
-		varying vec3 vNormal;
+		varying vec3 vColor;
 		void main() {
-			gl_FragColor = vec4( 0.5 * normalize(vNormal) + 0.5, 1.0 );
+			gl_FragColor = vec4(vColor, 1);
 		}
 	</script>
 
