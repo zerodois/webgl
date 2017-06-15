@@ -1,6 +1,6 @@
 # Quadribol project
 <p align="center">
-  <img src="https://raw.githubusercontent.com/zerodois/webgl/master/quadribol.jpg" align="center" height="200">
+  <img src="https://raw.githubusercontent.com/zerodois/webgl/master/docs/quadribol.jpg" align="center" height="200">
 </p>
 
 Bem vindo ao projeto Web Quadribol!
