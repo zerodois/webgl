@@ -10,4 +10,4 @@ As informações do projeto, como executá-lo (muito embora, como você deve sup
 
 Se tiver qualquer dúvida fique a vontade para contatar qualquer um da "galera" integrante do projeto, ou se preferir mudar o que quiser e nos mandar aquele pull request supimpa, fique a vontade. :D
 
-O grupo integrante do projeto é composto por [mim](https://github.com/zerodois) e também pelo [Abner](https://github.com/mistakenn), e esperamos que ao fim do projeto o ele esteja muito bacaninha :)
+O grupo integrante do projeto é composto por [mim](https://github.com/zerodois) e também pelo [Abner](https://github.com/mistakenn), e esperamos que ao fim do projeto ele esteja muito bacaninha :)
