@@ -1,15 +1,15 @@
 var scenarioSize = 5000
 var scenarioHeight = 400
-var app = new APP( scenarioSize, scenarioHeight )
+var app = new APP(scenarioSize, scenarioHeight)
 var controls
 var geometry, material, mesh
-var blocker = document.getElementById( 'blocker' )
-var instructions = document.getElementById( 'instructions' )
-var pommel, pspommel
-var camStart = new THREE.Vector3( 0, 10, 30 )
-var camStLookAt = new THREE.Vector3( 0, 0, 0 )
+var blocker = document.getElementById('blocker')
+var instructions = document.getElementById('instructions')
+var pommel, pspommel, stick
+var camStart = new THREE.Vector3(0, 10, 30)
+var camStLookAt = new THREE.Vector3(0, 0, 0)
 
-var initialBCP = new THREE.Vector3( randCoordinate(20), 20, randCoordinate(20) )
+var initialBCP = new THREE.Vector3(randCoordinate(20), 20, randCoordinate(20))
 var finalBCP
 
 app.load('models/wolf.obj', 0.05)
@@ -20,9 +20,20 @@ app.load('models/pommel.obj', 1, obj => {
 })
 
 // Pseudo-pommel
-app.sphere( obj => {
+app.sphere(obj => {
   obj.position.setX(initialBCP.x).setY(initialBCP.y).setZ(initialBCP.z)
   pommel = obj
+})
+
+// app.load('models/nimbus2000.obj', 0.06, obj => {
+//   obj.position.setX(20).setY(4.5).setZ(2)
+//   stick = obj
+// }, obj => {
+//   obj.rotateY(Math.PI / 4).rotateZ(-Math.PI / 4)
+// })
+
+app.load('models/stadium/QuiddichStadium.obj', 1, obj => {
+  obj.position.setZ(-5000)
 })
 
 var witch
@@ -30,8 +41,8 @@ app.texture('models/witch-fire.png', text => {
   app.load('models/witch.obj', 1, obj => {
     obj.position.setX(-10)
     witch = obj
-    obj.traverse( function ( child ) {
-      if ( child instanceof THREE.Mesh )
+    obj.traverse(function (child) {
+      if (child instanceof THREE.Mesh)
         child.material.map = text
     })
   })
@@ -39,28 +50,53 @@ app.texture('models/witch-fire.png', text => {
 
 app.load('models/deer.obj', 0.01, obj => {
   obj.position.setX(10)
-  obj.ambient =  new THREE.Vector3(0,  1, 0)
-  obj.diffuse =  new THREE.Vector3(0.7 , 0.7 , 0.7)
-  obj.specular = new THREE.Vector3(0.6 , 0.6 , 0.6)
+  obj.ambient = new THREE.Vector3(0, 1, 0)
+  obj.diffuse = new THREE.Vector3(0.7, 0.7, 0.7)
+  obj.specular = new THREE.Vector3(0.6, 0.6, 0.6)
   obj.shininess = 100.0
 
   shader(obj)
 }, shader)
 
-function shader (obj) {
-  var uniforms = THREE.UniformsUtils.merge( [
-    THREE.UniformsLib[ "lights" ],
-    { lightPosition: { type:"v3", value: app.directional.position } },
-    { ambientProduct: { type:"v3", value: app.directional.ambient.multiply(obj.ambient) } },
-    { diffuseProduct: { type:"v3", value: app.directional.diffuse.multiply(obj.diffuse) } },
-    { specularProduct: { type:"v3", value: app.directional.specular.multiply(obj.specular) } },
-    { shininess: { type:"float", value: obj.shininess } }
+function shader(obj) {
+  var uniforms = THREE.UniformsUtils.merge([
+    THREE.UniformsLib["lights"],
+    {
+      lightPosition: {
+        type: "v3",
+        value: app.directional.position
+      }
+    },
+    {
+      ambientProduct: {
+        type: "v3",
+        value: app.directional.ambient.multiply(obj.ambient)
+      }
+    },
+    {
+      diffuseProduct: {
+        type: "v3",
+        value: app.directional.diffuse.multiply(obj.diffuse)
+      }
+    },
+    {
+      specularProduct: {
+        type: "v3",
+        value: app.directional.specular.multiply(obj.specular)
+      }
+    },
+    {
+      shininess: {
+        type: "float",
+        value: obj.shininess
+      }
+    }
   ]);
 
   var material = new THREE.ShaderMaterial({
     uniforms: uniforms,
-    vertexShader: document.getElementById( 'vertex-shader' ).textContent,
-    fragmentShader: document.getElementById( 'fragment-shader' ).textContent,
+    vertexShader: document.getElementById('vertex-shader').textContent,
+    fragmentShader: document.getElementById('fragment-shader').textContent,
     lights: true
   })
 
@@ -69,33 +105,34 @@ function shader (obj) {
   })
 }
 
-function randCoordinate (limit, pos) {
+function randCoordinate(limit, pos) {
   return (limit || scenarioSize) / 2 * Math.random() * (pos || Math.random() > 0.5 ? 1 : -1)
 }
 
-function randVec () {
-  return new THREE.Vector3( randCoordinate(),
-                            randCoordinate(scenarioHeight, true),
-                            randCoordinate() )
+function randVec() {
+  return new THREE.Vector3(randCoordinate(),
+    randCoordinate(scenarioHeight, true),
+    randCoordinate())
 }
 
 var pointerlock = new Pointerlock()
 pointerlock.check(() => {}, err)
-function err () {
+
+function err() {
   instructions.innerHTML = 'Your browser doesn\'t seem to support Pointer Lock API'
 }
 
-pointerlock.onChange(function ( event ) {
+pointerlock.onChange(function (event) {
   var lock = pointerlock.hasLock()
   controlsEnabled = lock
   controls.enabled = lock
   blocker.style.display = lock ? 'none' : 'block'
   instructions.style.display = lock ? '' : '-webkit-box'
 })
-instructions.addEventListener( 'click', function ( event ) {
+instructions.addEventListener('click', function (event) {
   instructions.style.display = 'none'
   pointerlock.request()
-}, false )
+}, false)
 pointerlock.onError(() => {})
 
 controls = new THREE.PointerLockControls(app.camera)
@@ -117,16 +154,15 @@ app.draw(() => {
   moveCamera()
 })
 
-var signal = [ 1, -1 ]
-var inc = [ 0.4, 0.1, 0.4 ]
+var signal = [1, -1]
+var inc = [0.4, 0.1, 0.4]
 var radio = 10
 
 function movePseudoPommel() {
   if (Math.abs(pspommel.position.x) <= Math.abs(pspommel.position.z)) {
     pspommel.position.x += inc[0] * signal[1]
     pspommel.position.z = Math.sqrt(radio * radio - Math.pow(pspommel.position.x, 2)) * signal[1]
-  }
-  else {
+  } else {
     pspommel.position.z -= inc[2] * signal[0]
     pspommel.position.x = Math.sqrt(radio * radio - Math.pow(pspommel.position.z, 2)) * signal[0]
   }
@@ -139,27 +175,26 @@ function movePseudoPommel() {
     signal[1] *= -1
 }
 
-var curve = new THREE.CubicBezierCurve3 (
-              initialBCP,
-              randVec(),
-              randVec(),
-              finalBCP = randVec()
-            )
+var curve = new THREE.CubicBezierCurve3(
+  initialBCP,
+  randVec(),
+  randVec(),
+  finalBCP = randVec()
+)
 
 var curveTime = 0
-var curveInc = 0.0005
+var curveInc = 0.001
 
 function movePommel() {
-  pommel.position.copy( curve.getPointAt(curveTime += curveInc) )
-  if ( Math.abs(curveTime-0.9996) < 0.0005 )
-  {
+  pommel.position.copy(curve.getPointAt(curveTime += curveInc))
+  if (Math.abs(curveTime - 0.9996) < 0.0005) {
     curveTime = 0
-    curve = new THREE.CubicBezierCurve3 (
-              inicialBCP = finalBCP,
-              randVec(),
-              randVec(),
-              finalBCP = randVec()
-            )
+    curve = new THREE.CubicBezierCurve3(
+      inicialBCP = finalBCP,
+      randVec(),
+      randVec(),
+      finalBCP = randVec()
+    )
   }
 }
 
@@ -167,36 +202,36 @@ var prevTime = performance.now()
 var velocity = new THREE.Vector3()
 
 var startSpeed = 800.00
-var maxCoord = [ 50.00, 450.00, 50.00 ]
+var maxCoord = [50.00, 450.00, 50.00]
 
-function moveCamera() {  
+function moveCamera() {
   var camera = controls.getObject()
 
-  witch.rotateY( 0.01 )
+  witch.rotateY(0.01)
 
-  if ( KeyboardMove.keys.Hm ) {
-    camera.position.copy( camStart )
+  if (KeyboardMove.keys.Hm) {
+    camera.position.copy(camStart)
     velocity.x = velocity.y = velocity.z = 0
   }
 
   var time = performance.now()
-  var delta = ( time - prevTime ) / 1000
+  var delta = (time - prevTime) / 1000
   var sft = KeyboardMove.keys.Sft
   velocity.x -= velocity.x * 10.0 * delta
   velocity.z -= velocity.z * 10.0 * delta
 
   //velocity.y -= 9.8 * 10.0 * delta
-  if ( KeyboardMove.keys.W ) velocity.z -= startSpeed * delta * Math.max(1, sft * 3)
-  if ( KeyboardMove.keys.S ) velocity.z += startSpeed * delta
-  if ( KeyboardMove.keys.A ) velocity.x -= startSpeed * delta
-  if ( KeyboardMove.keys.D ) velocity.x += startSpeed * delta
-  
-  if ( KeyboardMove.keys.C )
+  if (KeyboardMove.keys.W) velocity.z -= startSpeed * delta * Math.max(1, sft * 3)
+  if (KeyboardMove.keys.S) velocity.z += startSpeed * delta
+  if (KeyboardMove.keys.A) velocity.x -= startSpeed * delta
+  if (KeyboardMove.keys.D) velocity.x += startSpeed * delta
+
+  if (KeyboardMove.keys.C)
     velocity.y -= startSpeed * 0.5 * delta
   else if (velocity.y < 0.0) // take it off to turn gravity on
     velocity.y *= 0.92
 
-  if ( KeyboardMove.keys.Spc )
+  if (KeyboardMove.keys.Spc)
     velocity.y += startSpeed * 0.4 * delta * Math.max(1, (velocity.y < 0.0) * 3)
   else if (velocity.y > 0.0)
     velocity.y *= 0.95
@@ -206,11 +241,11 @@ function moveCamera() {
   else if (camera.position.y <= 30.00 && velocity.y < 0.0 || camera.position.y + 30.00 >= maxCoord[1] && velocity.y > 0.0)
     velocity.y *= 0.9
 
-  camera.translateX( velocity.x * delta );
-  camera.translateY( velocity.y * delta );
-  camera.translateZ( velocity.z * delta );
+  camera.translateX(velocity.x * delta);
+  camera.translateY(velocity.y * delta);
+  camera.translateZ(velocity.z * delta);
 
-  if ( camera.position.y < 10 ) {
+  if (camera.position.y < 10) {
     velocity.y = 0;
     camera.position.y = 10;
   }
@@ -218,13 +253,13 @@ function moveCamera() {
   prevTime = time
 }
 
-window.addEventListener( 'resize', onWindowResize, false )
+window.addEventListener('resize', onWindowResize, false)
 
-function onWindowResize(){
+function onWindowResize() {
   app.camera.aspect = window.innerWidth / window.innerHeight
   app.camera.updateProjectionMatrix()
 
-  app.renderer.setSize( window.innerWidth, window.innerHeight )
+  app.renderer.setSize(window.innerWidth, window.innerHeight)
 }
 
 app.render()
