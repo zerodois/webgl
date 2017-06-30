@@ -5,7 +5,7 @@ var controls
 var geometry, material, mesh
 var blocker = document.getElementById('blocker')
 var instructions = document.getElementById('instructions')
-var pommel, pspommel, stick
+var pommel, pspommel, stick, arm
 var camStart = new THREE.Vector3(0, 10, 30)
 var camStLookAt = new THREE.Vector3(0, 0, 0)
 
@@ -23,6 +23,13 @@ app.load('models/pommel.obj', 1, obj => {
 app.sphere(obj => {
   obj.position.setX(initialBCP.x).setY(initialBCP.y).setZ(initialBCP.z)
   pommel = obj
+})
+
+app.arm(obj => {
+  //obj.position.setX(2).setY(8.5).setZ(29)
+  arm = obj
+}, obj => {
+  obj.rotateX(Math.PI/8).rotateZ(Math.PI/20)
 })
 
 // app.load('models/nimbus2000.obj', 0.06, obj => {
@@ -138,8 +145,14 @@ pointerlock.onError(() => {})
 controls = new THREE.PointerLockControls(app.camera)
 controls.getObject().translateZ(30)
 app.scene.add(controls.getObject())
+
+app.camera.add(arm)
+arm.translateX(2).translateY(-2.3)
+arm.visible = false
+
 app.scenario()
 KeyboardMove.aswd()
+MouseClick.mclick()
 
 var controlsEnabled = false
 
@@ -249,6 +262,8 @@ function moveCamera() {
     velocity.y = 0;
     camera.position.y = 10;
   }
+
+  arm.visible = MouseClick.right
 
   prevTime = time
 }

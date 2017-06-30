@@ -184,3 +184,38 @@ APP.prototype.sphere = function (callback) {
   this.scene.add(obj)
   obj.add(sound)
 }
+
+// Create Pseudo-Arm
+APP.prototype.arm = function (callback, callback2) {
+  var obj = new THREE.Object3D()
+  
+  var geometry = new THREE.BoxGeometry(1, 1, 10)
+  var material = new THREE.MeshBasicMaterial({
+    color: 0xA98765
+  })
+  obj.add (new THREE.Mesh(geometry, material))
+
+  geometry = new THREE.BoxGeometry(1.8, 0.5, 3)
+  material = new THREE.MeshBasicMaterial({
+    color: 0xA98775
+  })
+  var hand = new THREE.Object3D()
+  hand.add(new THREE.Mesh(geometry, material))
+  
+  geometry = new THREE.BoxGeometry(1.4, 0.5, 0.5)
+  
+  var finger = new THREE.Mesh(geometry, material)
+  finger.position.setX(-1.5).setZ(1)
+  hand.add(finger)
+
+  hand.position.setZ(-6)
+  obj.add(hand)
+
+  if (callback != undefined)
+    callback(obj)
+  this.scene.add(obj)
+  if (callback2 != undefined)
+    callback2(obj)
+  hand.rotateX(Math.PI/6).rotateZ(-Math.PI/6).translateY(0.5).translateX(-0.3)
+  finger.rotateY(-Math.PI/4).rotateZ(Math.PI/8).translateZ(-0.6).translateX(-0.3)
+}
