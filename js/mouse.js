@@ -11,6 +11,5 @@ MouseClick.mclick = function () {
     else if (e.button) rightclick = (e.button == 2)
     if (rightclick)
       MouseClick.right = val
-    console.log(rightclick, MouseClick.right)
   }
 }

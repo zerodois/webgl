@@ -5,7 +5,7 @@ var controls
 var geometry, material, mesh
 var blocker = document.getElementById('blocker')
 var instructions = document.getElementById('instructions')
-var pommel, pspommel, stick, arm
+var pommel, pspommel, stick, arm, hand, handSphere
 var camStart = new THREE.Vector3(0, 10, 30)
 var camStLookAt = new THREE.Vector3(0, 0, 0)
 
@@ -26,8 +26,8 @@ app.sphere(obj => {
 })
 
 app.arm(obj => {
-  //obj.position.setX(2).setY(8.5).setZ(29)
-  arm = obj
+  arm = obj[0]
+  hand = obj[1]
 }, obj => {
   obj.rotateX(Math.PI/8).rotateZ(Math.PI/20)
 })
@@ -42,6 +42,8 @@ app.arm(obj => {
 app.load('models/stadium/QuiddichStadium.obj', 1, obj => {
   obj.position.setZ(-5000)
 })
+
+// app.loadGrass()
 
 var witch
 app.texture('models/witch-fire.png', text => {
@@ -124,6 +126,10 @@ function randVec() {
 
 var pointerlock = new Pointerlock()
 pointerlock.check(() => {}, err)
+
+document.exitPointerLock = document.exitPointerLock ||
+  document.mozExitPointerLock ||
+	document.webkitExitPointerLock;
 
 function err() {
   instructions.innerHTML = 'Your browser doesn\'t seem to support Pointer Lock API'
@@ -264,6 +270,17 @@ function moveCamera() {
   }
 
   arm.visible = MouseClick.right
+
+  var handPos = new THREE.Vector3()
+  handPos.setFromMatrixPosition(hand.matrixWorld)
+
+  if (arm.visible && pommel.position.distanceTo(handPos) < 5)
+  {
+    document.exitPointerLock();
+    camera.position.copy(camStart)
+    velocity.x = velocity.y = velocity.z = 0
+    arm.visible = false
+  }
 
   prevTime = time
 }

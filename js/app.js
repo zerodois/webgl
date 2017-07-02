@@ -28,7 +28,7 @@ function APP(WALLWIDTH, WALLHEIGHT) {
   this.light.position.set(0.5, 1, 0.75)
   // this.light.position.set( 1, 0, 1 ).normalize()
   this.scene.add(this.light)
-
+  
   //Directional Light
   this.directional = new THREE.DirectionalLight(0xeeeeff)
   this.directional.position.set(0.5, 1, 0.75)
@@ -45,17 +45,17 @@ function APP(WALLWIDTH, WALLHEIGHT) {
   var directions = ["rt", "lf", "up", "dn", "bk", "ft"]
   var imageSuffix = ".png"
 
-  var urls = [];
+  var urls = []
   for (var i = 0; i < 6; i++)
     urls.push(imagePrefix + directions[i] + imageSuffix)
 
-  var reflectionCube = new THREE.CubeTextureLoader().load(urls);
-  reflectionCube.format = THREE.RGBFormat;
-  this.scene.background = reflectionCube;
+  var reflectionCube = new THREE.CubeTextureLoader().load(urls)
+  reflectionCube.format = THREE.RGBFormat
+  this.scene.background = reflectionCube
 
   // Axes lines
-  // var axes = new THREE.AxisHelper(100);
-  // this.scene.add( axes );
+  // var axes = new THREE.AxisHelper(100)
+  // this.scene.add( axes )
 
   // Objects
   this.fn = () => {}
@@ -81,6 +81,23 @@ APP.prototype.texture = function (url, fn) {
   })
   return texture
 }
+
+// APP.prototype.loadGrass = function () {
+//   var grass
+//   var mtlLoader = new THREE.MTLLoader()
+//   mtlLoader.setPath('models/grass/')
+//   mtlLoader.load('grass.mtl', function(materials) {
+//     materials.preload()
+//     var objLoader = new THREE.OBJLoader()
+//     objLoader.setMaterials(materials)
+//     objLoader.setPath('models/grass/')
+//     objLoader.load('grass.obj', function(object) {
+//       object.scale.set(100,100,100)
+//       object.position.z = -100
+//       app.scene.add(object)
+//     })
+//   })
+// }
 
 APP.prototype.load = function (url, scale, callback, endcallback) {
   var loader = new THREE.OBJLoader(this.manager)
@@ -115,10 +132,10 @@ APP.prototype.render = function () {
 // Draw scenario
 APP.prototype.scenario = function () {
   this.bottom()
-  this.walls(0, -this.wallWidth / 2, 0)
-  this.walls(0, this.wallWidth / 2, Math.PI)
-  this.walls(-this.wallWidth / 2, 0, Math.PI / 2)
-  this.walls(this.wallWidth / 2, 0, -Math.PI / 2)
+  this.wall(0, -this.wallWidth / 2, 0)
+  this.wall(0, this.wallWidth / 2, Math.PI)
+  this.wall(-this.wallWidth / 2, 0, Math.PI / 2)
+  this.wall(this.wallWidth / 2, 0, -Math.PI / 2)
 }
 
 //Draw floor
@@ -126,34 +143,36 @@ APP.prototype.bottom = function () {
   var geometry = new THREE.PlaneGeometry(20000, 20000, 100, 100)
   geometry.rotateX(-Math.PI / 2)
 
-  var textureLoader = new THREE.TextureLoader();
-  var texture = textureLoader.load('images/misc/grass.png');
-  texture.anisotropy = 4;
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(800, 800);
-  var material = new THREE.MeshBasicMaterial({
+  var textureLoader = new THREE.TextureLoader()
+  var texture = textureLoader.load('images/misc/grass.png')
+  var material = new THREE.MeshPhongMaterial({
+    color: 0xaaaaaa,
+    specular: 0x000000,
     map: texture
-  });
+  })
+
+  texture.anisotropy = 6
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping
+  texture.repeat.set(800, 800)
 
   var mesh = new THREE.Mesh(geometry, material)
   this.scene.add(mesh)
 }
 
 // Draw a wall
-APP.prototype.walls = function (x, z, angle) {
+APP.prototype.wall = function (x, z, angle) {
   var geometry = new THREE.PlaneGeometry(this.wallWidth, this.wallHeight, 100, 100)
   geometry.rotateY(angle)
 
-  var textureLoader = new THREE.TextureLoader();
-  var texture = textureLoader.load('images/misc/wall.jpg');
-  texture.anisotropy = 1;
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(20, 2);
+  var textureLoader = new THREE.TextureLoader()
+  var texture = textureLoader.load('images/misc/wall.jpg')
+
   var material = new THREE.MeshBasicMaterial({
     map: texture
-  });
+  })
+  
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping
+  texture.repeat.set(20, 2)
 
   var mesh = new THREE.Mesh(geometry, material)
   this.scene.add(mesh)
@@ -212,10 +231,11 @@ APP.prototype.arm = function (callback, callback2) {
   obj.add(hand)
 
   if (callback != undefined)
-    callback(obj)
+    callback([obj, hand])
   this.scene.add(obj)
   if (callback2 != undefined)
     callback2(obj)
+
   hand.rotateX(Math.PI/6).rotateZ(-Math.PI/6).translateY(0.5).translateX(-0.3)
   finger.rotateY(-Math.PI/4).rotateZ(Math.PI/8).translateZ(-0.6).translateX(-0.3)
 }
