@@ -1,6 +1,7 @@
 function APP(WALLWIDTH, WALLHEIGHT) {
   // Scene
   this.scene = new THREE.Scene()
+  this.clock = new THREE.Clock()
   this.floor = 0
 
   // Wall
@@ -70,6 +71,9 @@ APP.prototype.draw = function (fn) {
   this.fn = fn
 }
 
+APP.prototype.delta = function () {
+  return this.clock.getDelta() }
+
 APP.prototype.texture = function (url, fn) {
   var texture = new THREE.Texture()
   var loader = new THREE.ImageLoader(this.manager)
@@ -81,23 +85,6 @@ APP.prototype.texture = function (url, fn) {
   })
   return texture
 }
-
-// APP.prototype.loadGrass = function () {
-//   var grass
-//   var mtlLoader = new THREE.MTLLoader()
-//   mtlLoader.setPath('models/grass/')
-//   mtlLoader.load('grass.mtl', function(materials) {
-//     materials.preload()
-//     var objLoader = new THREE.OBJLoader()
-//     objLoader.setMaterials(materials)
-//     objLoader.setPath('models/grass/')
-//     objLoader.load('grass.obj', function(object) {
-//       object.scale.set(100,100,100)
-//       object.position.z = -100
-//       app.scene.add(object)
-//     })
-//   })
-// }
 
 APP.prototype.load = function (url, scale, callback, endcallback) {
   var loader = new THREE.OBJLoader(this.manager)

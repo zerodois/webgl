@@ -8,16 +8,36 @@ var instructions = document.getElementById('instructions')
 var pommel, pspommel, stick, arm, hand, handSphere
 var camStart = new THREE.Vector3(0, 10, 30)
 var camStLookAt = new THREE.Vector3(0, 0, 0)
+var mixer = null
 
 var initialBCP = new THREE.Vector3(randCoordinate(20), 20, randCoordinate(20))
 var finalBCP
 
 app.load('models/wolf.obj', 0.05)
 
-app.load('models/pommel.obj', 1, obj => {
-  obj.position.setX(10).setY(10)
-  pspommel = obj
-})
+var loader = new THREE.JSONLoader()
+loader.load('models/golden-snitch/animation/golden-snitch.json', function (geometry, materials) {
+
+    materials.forEach(function (material) {
+      material.skinning = true;
+    });
+    character = new THREE.SkinnedMesh(
+      geometry,
+      new THREE.MeshBasicMaterial( { color: 0xFFD700, skinning: true } )
+    );
+
+    mixer = new THREE.AnimationMixer(character);
+    animation = mixer.clipAction(geometry.animations[ 0 ]);
+    animation.setEffectiveWeight(1);
+    animation.clampWhenFinished = true;
+    animation.enabled = true;
+
+    pspommel = character
+    app.scene.add(character);
+
+    isLoaded = true;
+    animation.play();
+  });
 
 // Pseudo-pommel
 app.sphere(obj => {
@@ -167,6 +187,10 @@ app.draw(() => {
     prevTime = performance.now()
     return
   }
+
+  var delta = app.delta();
+  mixer.update(delta);
+
 
   movePseudoPommel()
   movePommel()
