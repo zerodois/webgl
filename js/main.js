@@ -5,7 +5,7 @@ var controls
 var geometry, material, mesh
 var blocker = document.getElementById('blocker')
 var instructions = document.getElementById('instructions')
-var pommel, pspommel, stick, arm, hand, handSphere
+var pspommel, stick, arm, hand, handSphere
 var camStart = new THREE.Vector3(0, 10, 30)
 var camStLookAt = new THREE.Vector3(0, 0, 0)
 var mixer = []
@@ -27,98 +27,36 @@ var curveInc = 0.001
 
 app.obj('models/wolf').scale(0.05).load()
 
-let loader = new THREE.JSONLoader()
-loader.load('models/golden-snitch/animation/golden-snitch.json', function (geometry, materials) {
-  materials.forEach(function (material) {
-    material.skinning = true
+app.json('models/golden-snitch/animation/golden-snitch')
+  .as('snitch')
+  .skinning([ 0xFFD700, 0xFFD700 ])
+  .after(character => {
+    app.scene.add(character)
+    character.position.setX(initialBCP.x).setY(initialBCP.y).setZ(initialBCP.z)
+    character.lookAt(curve.getPointAt(curveInc))
+    addSound(character)
+    character.animation(0).play()
   })
-  character = new THREE.SkinnedMesh(
-    geometry,
-    new THREE.MeshBasicMaterial( { color: 0xFFD700, skinning: true } )
-  )
+  .load()
 
-  let m = new THREE.AnimationMixer(character)
-  let animation = m.clipAction(geometry.animations[ 0 ])
-  mixer.push(m)
+app.json('models/arms/arms')
+  .skinning([0xE3B186, 0xE3B186])
+  .after(character => {
+    app.camera.add(character)
+    character.translateX(0).translateZ(0).translateY(-6).scale.set(2,2,2)
+    character.animation('rest').setLoop(THREE.LoopOnce, 0).play()
+  })
+  .load()
 
-  animation = m.clipAction(geometry.animations[ 0 ])
-  animation.setEffectiveWeight(1)
-  animation.clampWhenFinished = true
-  animation.enabled = true
+app.json('models/arms/broom')
+  .skinning([ 0x6A3E25 ])
+  .after(function (b) {
+    app.camera.add(b)
+    b.translateX(0).translateZ(0).translateY(-6).scale.set(2,2,2)
+  })
+  .load()
 
-  pommel = character
-  app.scene.add(character)
-  pommel.position.setX(initialBCP.x).setY(initialBCP.y).setZ(initialBCP.z)
-  pommel.lookAt(curve.getPointAt(curveInc))
-  
-  addSound(character)
-
-  isLoaded = true
-  animation.play()
-})
-
-var broom
-loader.load('models/arms/arms.json', function (geometry, materials) {
-
-  let arr = []
-  arr.push(new THREE.MeshLambertMaterial({ color: 0xE3B186, skinning: true }))
-  arr.push(new THREE.MeshLambertMaterial({ color: 0xE3B186, skinning: true }))
-
-  broom = new THREE.SkinnedMesh(
-    geometry,
-    arr
-  );
-
-  let m = new THREE.AnimationMixer(broom)
-  mixer.push(m)
-
-  animations.get = m.clipAction(geometry.animations[ 1 ])
-  animations.get.setEffectiveWeight(1);
-  animations.get.clampWhenFinished = true;
-  animations.get.enabled = true;
-  animations.get.setLoop(THREE.LoopOnce, 0);
-  animations.get.clampWhenFinished = true;
-
-  animations.normal = m.clipAction(geometry.animations[ 3 ])
-  animations.normal.setEffectiveWeight(1);
-  animations.normal.clampWhenFinished = true;
-  animations.normal.enabled = true;
-  animations.normal.setLoop(THREE.LoopOnce, 0);
-  animations.normal.clampWhenFinished = true;
-
-  animations.back = m.clipAction(geometry.animations[ 0 ])
-  animations.back.setEffectiveWeight(1);
-  animations.back.clampWhenFinished = true;
-  animations.back.enabled = true;
-  animations.back.setLoop(THREE.LoopOnce, 0);
-  animations.back.clampWhenFinished = true;
-
-  app.camera.add(broom)
-  //broom.translateY(30).scale.set(10,10,10)
-  broom.translateX(0).translateZ(0).translateY(-6).scale.set(2,2,2)
-  //broom.translateX(0).translateZ(-10).translateY(-6).scale.set(2,2,2)
-
-  isLoaded = true;
-  animations.normal.play();
-});
-
-app.json('models/arms/broom').return(x => x).after(function (geometry, materials) {
-
-  let b = new THREE.SkinnedMesh(
-    geometry,
-    new THREE.MeshLambertMaterial({ color: 0x6A3E25, skinning: true })
-  );
-
-  app.camera.add(b)
-  //broom.translateY(30).scale.set(10,10,10)
-  b.translateX(0).translateZ(0).translateY(-6).scale.set(2,2,2)
-  //broom.translateX(0).translateZ(-10).translateY(-6).scale.set(2,2,2)
-
-  isLoaded = true;
-}).load();
-
-
-// Pseudo-pommel
+  // Pseudo-pommel
 app.sphere(obj => {
   // obj.position.setX(initialBCP.x).setY(initialBCP.y).setZ(initialBCP.z)
   obj.position.setX(10).setY(14)
@@ -273,12 +211,8 @@ var controlsEnabled = false
 app.draw(() => {
   if (!controlsEnabled) {
     prevTime = performance.now()
-    return
+    return false
   }
-
-  var delta = app.delta();
-  mixer.forEach(m => m.update(delta))
-
   movePseudoPommel()
   movePommel()
   moveCamera()
@@ -305,8 +239,8 @@ function movePseudoPommel() {
     signal[1] *= -1
 }
 
-function movePommel() {
-  pommel.position.copy(curve.getPointAt(curveTime += curveInc))
+function movePommel () {
+  app.get('snitch').position.copy(curve.getPointAt(curveTime += curveInc))
   if (Math.abs(curveTime - 0.9996) < 0.0005) {
     curveTime = 0
     curve = new THREE.CubicBezierCurve3(
@@ -316,7 +250,7 @@ function movePommel() {
       finalBCP = randVec()
     )
   }
-  pommel.lookAt(curve.getPointAt(curveTime + curveInc))
+  app.get('snitch').lookAt(curve.getPointAt(curveTime + curveInc))
 }
 
 var prevTime = performance.now()
@@ -383,7 +317,7 @@ visible = MouseClick.right
   var handPos = new THREE.Vector3()
   //handPos.setFromMatrixPosition(hand.matrixWorld)
 
-  if (arm.visible && pommel.position.distanceTo(handPos) < 5)
+  if (arm.visible && app.get('snitch').position.distanceTo(handPos) < 5)
   {
     document.exitPointerLock();
     camera.position.copy(camStart)

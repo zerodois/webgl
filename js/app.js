@@ -3,6 +3,7 @@ function APP(WALLWIDTH, WALLHEIGHT) {
   this.scene = new THREE.Scene()
   this.clock = new THREE.Clock()
   this.floor = 0
+  this.mixer = []
 
   // Wall
   this.wallWidth = WALLWIDTH || 5000
@@ -113,27 +114,48 @@ APP.prototype.obj = function (url) {
 }
 
 APP.prototype.json = function (url) {
-  let loader = new THREE.JSONLoader()
+  let self = this
+  let loader = new THREE.JSONLoader(this.manager)
+  function mesh (arr) {
+    this.return(skinning)
+    function skinning (geometry, materials) {
+      let mats = arr ? arr.map(item => new THREE.MeshLambertMaterial({ color: item, skinning: true })) : materials
+      let character = new THREE.SkinnedMesh(geometry, mats)
+      if (geometry.animations === undefined)
+        return character
+      let m = new THREE.AnimationMixer(character)
+      self.mixer.push(m)
+      geometry.animations.forEach((a, i) => {
+        let animation = null
+        animation = m.clipAction(geometry.animations[ i ])
+        animation.setEffectiveWeight(1)
+        animation.clampWhenFinished = true
+        animation.enabled = true
+        !character.actions ? character.actions = {} : false
+        character.actions[ i ] = animation
+        character.actions[ geometry.animations[ i ].name ] = character.actions[ i ]
+      })
+      character.animation = function (index) {
+        if (index === undefined)
+          return character.actions
+        return character.actions[ index ]
+      }
+      return character
+    }
+    return this;
+  }
   return this.global('json', loader, url)
-
-  // loader.load('models/arms/broom.json', function (geometry, materials) {
-  //   let b = new THREE.SkinnedMesh(
-  //     geometry,
-  //     new THREE.MeshLambertMaterial({ color: 0x6A3E25, skinning: true })
-  //   );
-
-  //   app.camera.add(b)
-  //   //broom.translateY(30).scale.set(10,10,10)
-  //   b.translateX(0).translateZ(0).translateY(-6).scale.set(2,2,2)
-  //   //broom.translateX(0).translateZ(-10).translateY(-6).scale.set(2,2,2)
-
-  //   isLoaded = true;
-  // });
+    .add('skinning', mesh)
+    .return(x => x)
 }
 
 APP.prototype.global = function (ext, loader, url) {
   let self = this
   let prop = { before: [], after: [] }
+  function add (prop, fn) {
+    this[ prop ] = fn
+    return this
+  }
   function construct (name) {
     return function (fn) {
       if (Array.isArray(prop[ name ]))
@@ -150,6 +172,7 @@ APP.prototype.global = function (ext, loader, url) {
         let ret = prop.return(obj)
         prop.before.forEach(fn => fn(ret, mat))
         prop.after.forEach(fn => fn(ret, mat))
+        self.set(prop.as ? prop.as : name, ret)
         return true
       }
       if (prop.scale)
@@ -167,6 +190,7 @@ APP.prototype.global = function (ext, loader, url) {
     })
   }
   return {
+    add,
     load,
     before: construct('before'),
     texture: construct('texture'),
@@ -201,7 +225,9 @@ APP.prototype.render = function () {
 
   const render = () => {
     requestAnimationFrame(render)
-    this.fn()
+    let delta = self.delta()
+    if(this.fn() !== false)
+      self.mixer.forEach(m => m.update(delta))
     self.renderer.render(self.scene, self.camera)
   }
   render()
