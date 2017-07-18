@@ -168,17 +168,17 @@ APP.prototype.wall = function (x, z, angle) {
 
 // Create Pseudo-Pommel
 APP.prototype.sphere = function (callback) {
-  var listener = new THREE.AudioListener()
-  this.camera.add(listener)
+  // var listener = new THREE.AudioListener()
+  // this.camera.add(listener)
 
-  var sound = new THREE.PositionalAudio(listener)
-  sound.setLoop(1)
-  var audioLoader = new THREE.AudioLoader()
-  audioLoader.load('sounds/hedwig.mp3', function (buffer) {
-    sound.setBuffer(buffer)
-    sound.setRefDistance(45)
-    sound.play()
-  })
+  // var sound = new THREE.PositionalAudio(listener)
+  // sound.setLoop(1)
+  // var audioLoader = new THREE.AudioLoader()
+  // audioLoader.load('sounds/hedwig.mp3', function (buffer) {
+  //   sound.setBuffer(buffer)
+  //   sound.setRefDistance(45)
+  //   sound.play()
+  // })
 
   var geometry = new THREE.SphereGeometry(1, 6, 6)
   var material = new THREE.MeshBasicMaterial({
@@ -188,7 +188,7 @@ APP.prototype.sphere = function (callback) {
   if (callback != undefined)
     callback(obj)
   this.scene.add(obj)
-  obj.add(sound)
+  // obj.add(sound)
 }
 
 // Create Pseudo-Arm

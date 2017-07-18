@@ -15,32 +15,47 @@ var animations = {}
 var initialBCP = new THREE.Vector3(randCoordinate(20), 20, randCoordinate(20))
 var finalBCP
 
+var curve = new THREE.CubicBezierCurve3(
+  initialBCP,
+  randVec(),
+  randVec(),
+  finalBCP = randVec()
+)
+
+var curveTime = 0
+var curveInc = 0.001
+
 app.load('models/wolf.obj', 0.05)
 
 var loader = new THREE.JSONLoader()
 loader.load('models/golden-snitch/animation/golden-snitch.json', function (geometry, materials) {
+  materials.forEach(function (material) {
+    material.skinning = true
+  })
+  character = new THREE.SkinnedMesh(
+    geometry,
+    new THREE.MeshBasicMaterial( { color: 0xFFD700, skinning: true } )
+  )
 
-    materials.forEach(function (material) {
-      material.skinning = true;
-    });
-    character = new THREE.SkinnedMesh(
-      geometry,
-      new THREE.MeshBasicMaterial( { color: 0xFFD700, skinning: true } )
-    );
+  let m = new THREE.AnimationMixer(character)
+  let animation = m.clipAction(geometry.animations[ 0 ])
+  mixer.push(m)
 
-    let m = new THREE.AnimationMixer(character)
-    let animation = m.clipAction(geometry.animations[ 0 ])
-    mixer.push(m)
-    animation.setEffectiveWeight(1)
-    animation.clampWhenFinished = true
-    animation.enabled = true
+  animation = m.clipAction(geometry.animations[ 0 ])
+  animation.setEffectiveWeight(1)
+  animation.clampWhenFinished = true
+  animation.enabled = true
 
-    pspommel = character
-    app.scene.add(character);
+  pommel = character
+  app.scene.add(character)
+  pommel.position.setX(initialBCP.x).setY(initialBCP.y).setZ(initialBCP.z)
+  pommel.lookAt(curve.getPointAt(curveInc))
+  
+  addSound(character)
 
-    isLoaded = true;
-    animation.play();
-  });
+  isLoaded = true
+  animation.play()
+})
 
 var broom
 loader.load('models/arms/arms.json', function (geometry, materials) {
@@ -107,8 +122,9 @@ loader.load('models/arms/broom.json', function (geometry, materials) {
 
 // Pseudo-pommel
 app.sphere(obj => {
-  obj.position.setX(initialBCP.x).setY(initialBCP.y).setZ(initialBCP.z)
-  pommel = obj
+  // obj.position.setX(initialBCP.x).setY(initialBCP.y).setZ(initialBCP.z)
+  obj.position.setX(10).setY(14)
+  pspommel = obj
 })
 
 app.arm(obj => {
@@ -198,6 +214,22 @@ function shader(obj) {
   })
 }
 
+function addSound(obj) {
+  var listener = new THREE.AudioListener()
+  app.camera.add(listener)
+
+  var sound = new THREE.PositionalAudio(listener)
+  sound.setLoop(1)
+  var audioLoader = new THREE.AudioLoader()
+  audioLoader.load('sounds/hedwig.mp3', function (buffer) {
+    sound.setBuffer(buffer)
+    sound.setRefDistance(45)
+    sound.play()
+  })
+
+  obj.add(sound)
+}
+
 function randCoordinate(limit, pos) {
   return (limit || scenarioSize) / 2 * Math.random() * (pos || Math.random() > 0.5 ? 1 : -1)
 }
@@ -281,16 +313,6 @@ function movePseudoPommel() {
     signal[1] *= -1
 }
 
-var curve = new THREE.CubicBezierCurve3(
-  initialBCP,
-  randVec(),
-  randVec(),
-  finalBCP = randVec()
-)
-
-var curveTime = 0
-var curveInc = 0.001
-
 function movePommel() {
   pommel.position.copy(curve.getPointAt(curveTime += curveInc))
   if (Math.abs(curveTime - 0.9996) < 0.0005) {
@@ -302,6 +324,7 @@ function movePommel() {
       finalBCP = randVec()
     )
   }
+  pommel.lookAt(curve.getPointAt(curveTime + curveInc))
 }
 
 var prevTime = performance.now()

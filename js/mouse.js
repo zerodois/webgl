@@ -9,6 +9,7 @@ MouseClick.mclick = function () {
     var rightclick
     if (e.which) rightclick = (e.which == 3)
     else if (e.button) rightclick = (e.button == 2)
+    
     if (rightclick)
       MouseClick.right = val
   }
