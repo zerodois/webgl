@@ -8,7 +8,9 @@ var instructions = document.getElementById('instructions')
 var pommel, pspommel, stick, arm, hand, handSphere
 var camStart = new THREE.Vector3(0, 10, 30)
 var camStLookAt = new THREE.Vector3(0, 0, 0)
-var mixer = null
+var mixer = []
+
+var animations = {}
 
 var initialBCP = new THREE.Vector3(randCoordinate(20), 20, randCoordinate(20))
 var finalBCP
@@ -26,11 +28,12 @@ loader.load('models/golden-snitch/animation/golden-snitch.json', function (geome
       new THREE.MeshBasicMaterial( { color: 0xFFD700, skinning: true } )
     );
 
-    mixer = new THREE.AnimationMixer(character);
-    animation = mixer.clipAction(geometry.animations[ 0 ]);
-    animation.setEffectiveWeight(1);
-    animation.clampWhenFinished = true;
-    animation.enabled = true;
+    let m = new THREE.AnimationMixer(character)
+    let animation = m.clipAction(geometry.animations[ 0 ])
+    mixer.push(m)
+    animation.setEffectiveWeight(1)
+    animation.clampWhenFinished = true
+    animation.enabled = true
 
     pspommel = character
     app.scene.add(character);
@@ -38,6 +41,69 @@ loader.load('models/golden-snitch/animation/golden-snitch.json', function (geome
     isLoaded = true;
     animation.play();
   });
+
+var broom
+loader.load('models/arms/arms.json', function (geometry, materials) {
+
+  let arr = []
+  arr.push(new THREE.MeshLambertMaterial({ color: 0xE3B186, skinning: true }))
+  arr.push(new THREE.MeshLambertMaterial({ color: 0xE3B186, skinning: true }))
+
+  broom = new THREE.SkinnedMesh(
+    geometry,
+    arr
+  );
+
+  let m = new THREE.AnimationMixer(broom)
+  mixer.push(m)
+
+  console.log(geometry.animations)
+
+  animations.get = m.clipAction(geometry.animations[ 1 ])
+  animations.get.setEffectiveWeight(1);
+  animations.get.clampWhenFinished = true;
+  animations.get.enabled = true;
+  animations.get.setLoop(THREE.LoopOnce, 0);
+  animations.get.clampWhenFinished = true;
+
+  animations.normal = m.clipAction(geometry.animations[ 3 ])
+  animations.normal.setEffectiveWeight(1);
+  animations.normal.clampWhenFinished = true;
+  animations.normal.enabled = true;
+  animations.normal.setLoop(THREE.LoopOnce, 0);
+  animations.normal.clampWhenFinished = true;
+
+  animations.back = m.clipAction(geometry.animations[ 0 ])
+  animations.back.setEffectiveWeight(1);
+  animations.back.clampWhenFinished = true;
+  animations.back.enabled = true;
+  animations.back.setLoop(THREE.LoopOnce, 0);
+  animations.back.clampWhenFinished = true;
+
+  app.camera.add(broom)
+  //broom.translateY(30).scale.set(10,10,10)
+  broom.translateX(0).translateZ(0).translateY(-6).scale.set(2,2,2)
+  //broom.translateX(0).translateZ(-10).translateY(-6).scale.set(2,2,2)
+
+  isLoaded = true;
+  animations.normal.play();
+});
+
+loader.load('models/arms/broom.json', function (geometry, materials) {
+
+  let b = new THREE.SkinnedMesh(
+    geometry,
+    new THREE.MeshLambertMaterial({ color: 0x6A3E25, skinning: true })
+  );
+
+  app.camera.add(b)
+  //broom.translateY(30).scale.set(10,10,10)
+  b.translateX(0).translateZ(0).translateY(-6).scale.set(2,2,2)
+  //broom.translateX(0).translateZ(-10).translateY(-6).scale.set(2,2,2)
+
+  isLoaded = true;
+});
+
 
 // Pseudo-pommel
 app.sphere(obj => {
@@ -62,8 +128,6 @@ app.arm(obj => {
 app.load('models/stadium/QuiddichStadium.obj', 1, obj => {
   obj.position.setZ(-5000)
 })
-
-// app.loadGrass()
 
 var witch
 app.texture('models/witch-fire.png', text => {
@@ -189,8 +253,7 @@ app.draw(() => {
   }
 
   var delta = app.delta();
-  mixer.update(delta);
-
+  mixer.forEach(m => m.update(delta))
 
   movePseudoPommel()
   movePommel()
@@ -293,10 +356,10 @@ function moveCamera() {
     camera.position.y = 10;
   }
 
-  arm.visible = MouseClick.right
+  //arm.visible = MouseClick.right
 
   var handPos = new THREE.Vector3()
-  handPos.setFromMatrixPosition(hand.matrixWorld)
+  //handPos.setFromMatrixPosition(hand.matrixWorld)
 
   if (arm.visible && pommel.position.distanceTo(handPos) < 5)
   {
