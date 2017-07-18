@@ -25,9 +25,9 @@ var curve = new THREE.CubicBezierCurve3(
 var curveTime = 0
 var curveInc = 0.001
 
-app.load('models/wolf.obj', 0.05)
+app.obj('models/wolf').scale(0.05).load()
 
-var loader = new THREE.JSONLoader()
+let loader = new THREE.JSONLoader()
 loader.load('models/golden-snitch/animation/golden-snitch.json', function (geometry, materials) {
   materials.forEach(function (material) {
     material.skinning = true
@@ -72,8 +72,6 @@ loader.load('models/arms/arms.json', function (geometry, materials) {
   let m = new THREE.AnimationMixer(broom)
   mixer.push(m)
 
-  console.log(geometry.animations)
-
   animations.get = m.clipAction(geometry.animations[ 1 ])
   animations.get.setEffectiveWeight(1);
   animations.get.clampWhenFinished = true;
@@ -104,7 +102,7 @@ loader.load('models/arms/arms.json', function (geometry, materials) {
   animations.normal.play();
 });
 
-loader.load('models/arms/broom.json', function (geometry, materials) {
+app.json('models/arms/broom').return(x => x).after(function (geometry, materials) {
 
   let b = new THREE.SkinnedMesh(
     geometry,
@@ -117,7 +115,7 @@ loader.load('models/arms/broom.json', function (geometry, materials) {
   //broom.translateX(0).translateZ(-10).translateY(-6).scale.set(2,2,2)
 
   isLoaded = true;
-});
+}).load();
 
 
 // Pseudo-pommel
@@ -134,38 +132,32 @@ app.arm(obj => {
   obj.rotateX(Math.PI/8).rotateZ(Math.PI/20)
 })
 
-// app.load('models/nimbus2000.obj', 0.06, obj => {
-//   obj.position.setX(20).setY(4.5).setZ(2)
-//   stick = obj
-// }, obj => {
-//   obj.rotateY(Math.PI / 4).rotateZ(-Math.PI / 4)
-// })
-
-app.load('models/stadium/QuiddichStadium.obj', 1, obj => {
-  obj.position.setZ(-5000)
-})
-
-var witch
-app.texture('models/witch-fire.png', text => {
-  app.load('models/witch.obj', 1, obj => {
-    obj.position.setX(-10)
-    witch = obj
-    obj.traverse(function (child) {
-      if (child instanceof THREE.Mesh)
-        child.material.map = text
-    })
+app.obj('models/stadium/QuiddichStadium')
+  .before(obj => {
+    obj.position.setZ(-5000)
   })
-})
+  .load()
 
-app.load('models/deer.obj', 0.01, obj => {
-  obj.position.setX(10)
-  obj.ambient = new THREE.Vector3(0, 1, 0)
-  obj.diffuse = new THREE.Vector3(0.7, 0.7, 0.7)
-  obj.specular = new THREE.Vector3(0.6, 0.6, 0.6)
-  obj.shininess = 100.0
+app.png('models/witch-fire').after(texture => {
+  app.obj('models/witch')
+    .before(obj => {
+      obj.position.setX(-10)
+    })
+    .texture(texture)
+    .load()
+}).load()
 
-  shader(obj)
-}, shader)
+app.obj('models/deer')
+   .scale(0.01)
+   .before(obj => {
+      obj.position.setX(10)
+      obj.ambient = new THREE.Vector3(0, 1, 0)
+      obj.diffuse = new THREE.Vector3(0.7, 0.7, 0.7)
+      obj.specular = new THREE.Vector3(0.6, 0.6, 0.6)
+      obj.shininess = 100.0
+   })
+   .after(shader)
+   .load()
 
 function shader(obj) {
   var uniforms = THREE.UniformsUtils.merge([
@@ -336,7 +328,7 @@ var maxCoord = [50.00, 450.00, 50.00]
 function moveCamera() {
   var camera = controls.getObject()
 
-  witch.rotateY(0.01)
+  app.get('witch').rotateY(0.01)
 
   if (KeyboardMove.keys.Hm) {
     camera.position.copy(camStart)
@@ -379,7 +371,14 @@ function moveCamera() {
     camera.position.y = 10;
   }
 
-  //arm.visible = MouseClick.right
+  //arm.
+// app.load('models/nimbus2000.obj', 0.06, obj => {
+//   obj.position.setX(20).setY(4.5).setZ(2)
+//   stick = obj
+// }, obj => {
+//   obj.rotateY(Math.PI / 4).rotateZ(-Math.PI / 4)
+// })
+visible = MouseClick.right
 
   var handPos = new THREE.Vector3()
   //handPos.setFromMatrixPosition(hand.matrixWorld)

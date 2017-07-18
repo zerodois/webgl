@@ -9,7 +9,7 @@ function APP(WALLWIDTH, WALLHEIGHT) {
   this.wallHeight = WALLHEIGHT || 400
 
   // Camera
-  var viewAngle = 75,
+  let viewAngle = 75,
     aspectRatio = window.innerWidth / window.innerHeight,
     near = 0.4,
     far = 20000
@@ -21,6 +21,16 @@ function APP(WALLWIDTH, WALLHEIGHT) {
   this.manager = new THREE.LoadingManager()
   this.manager.onLoad = onLoad
   this.manager.onProgress = onProgress
+
+  //Private methods
+  this.get = function (name) {
+    if (objects[ name ])
+      return objects[ name ]
+    return null
+  }
+  this.set = function (name, obj) {
+    objects[ name ] = obj
+  }
 
   // Light
   this.light = new THREE.HemisphereLight(0xeeeeff, 0x777788, 1)
@@ -42,23 +52,24 @@ function APP(WALLWIDTH, WALLHEIGHT) {
 
   // Scene background
   // http://www.custommapmakers.org/skyboxes.php
-  var imagePrefix = "images/background/hills2_"
-  var directions = ["rt", "lf", "up", "dn", "bk", "ft"]
-  var imageSuffix = ".png"
+  let imagePrefix = "images/background/hills2_"
+  let directions = ["rt", "lf", "up", "dn", "bk", "ft"]
+  let imageSuffix = ".png"
 
-  var urls = []
-  for (var i = 0; i < 6; i++)
+  let urls = []
+  for (let i = 0; i < 6; i++)
     urls.push(imagePrefix + directions[i] + imageSuffix)
 
-  var reflectionCube = new THREE.CubeTextureLoader().load(urls)
+  let reflectionCube = new THREE.CubeTextureLoader().load(urls)
   reflectionCube.format = THREE.RGBFormat
   this.scene.background = reflectionCube
 
   // Axes lines
-  // var axes = new THREE.AxisHelper(100)
+  // let axes = new THREE.AxisHelper(100)
   // this.scene.add( axes )
 
   // Objects
+  let objects = {}
   this.fn = () => {}
   this.arr = []
 }
@@ -75,8 +86,8 @@ APP.prototype.delta = function () {
   return this.clock.getDelta() }
 
 APP.prototype.texture = function (url, fn) {
-  var texture = new THREE.Texture()
-  var loader = new THREE.ImageLoader(this.manager)
+  let texture = new THREE.Texture()
+  let loader = new THREE.ImageLoader(this.manager)
   loader.load(url, function (image) {
     texture.image = image
     texture.needsUpdate = true
@@ -86,9 +97,89 @@ APP.prototype.texture = function (url, fn) {
   return texture
 }
 
+APP.prototype.png = function (url) {
+  let loader = new THREE.ImageLoader(this.manager)
+  return this.global('png', loader, url).return(image => {
+    let texture = new THREE.Texture()
+    texture.image = image
+    texture.needsUpdate = true
+    return texture
+  })
+}
+
+APP.prototype.obj = function (url) {
+  let loader = new THREE.OBJLoader(this.manager)
+  return this.global('obj', loader, url)
+}
+
+APP.prototype.json = function (url) {
+  let loader = new THREE.JSONLoader()
+  return this.global('json', loader, url)
+
+  // loader.load('models/arms/broom.json', function (geometry, materials) {
+  //   let b = new THREE.SkinnedMesh(
+  //     geometry,
+  //     new THREE.MeshLambertMaterial({ color: 0x6A3E25, skinning: true })
+  //   );
+
+  //   app.camera.add(b)
+  //   //broom.translateY(30).scale.set(10,10,10)
+  //   b.translateX(0).translateZ(0).translateY(-6).scale.set(2,2,2)
+  //   //broom.translateX(0).translateZ(-10).translateY(-6).scale.set(2,2,2)
+
+  //   isLoaded = true;
+  // });
+}
+
+APP.prototype.global = function (ext, loader, url) {
+  let self = this
+  let prop = { before: [], after: [] }
+  function construct (name) {
+    return function (fn) {
+      if (Array.isArray(prop[ name ]))
+        prop[ name ].push(fn)
+      else
+        prop[ name ] = fn
+      return this
+    }
+  }
+  function load (callback) {
+    let name = url.split('/').slice(-1).pop()
+    loader.load(`${url}.${ext}`, (obj, mat) => {
+      if (prop.return) {
+        let ret = prop.return(obj)
+        prop.before.forEach(fn => fn(ret, mat))
+        prop.after.forEach(fn => fn(ret, mat))
+        return true
+      }
+      if (prop.scale)
+        obj.scale.set(prop.scale, prop.scale, prop.scale)
+      obj.position.set(0, self.floor, 0)
+      prop.before.forEach(fn => fn(obj, mat))
+      if (prop.texture)
+        obj.traverse(function (child) {
+          if (child instanceof THREE.Mesh)
+            child.material.map = prop.texture
+        })
+      self.scene.add(obj)
+      self.set(prop.as ? prop.as : name, obj)
+      prop.after.forEach(fn => fn(obj, mat))
+    })
+  }
+  return {
+    load,
+    before: construct('before'),
+    texture: construct('texture'),
+    after: construct('after'),
+    scale: construct('scale'),
+    return: construct('return'),
+    as: construct('as')
+  }
+}
+
 APP.prototype.load = function (url, scale, callback, endcallback) {
-  var loader = new THREE.OBJLoader(this.manager)
-  var self = this
+  let loader = new THREE.OBJLoader(this.manager)
+  let self = this
   loader.load(url, obj => {
     obj.scale.set(scale, scale, scale)
     obj.position.set(0, this.floor, 0)
@@ -101,7 +192,7 @@ APP.prototype.load = function (url, scale, callback, endcallback) {
 }
 
 APP.prototype.render = function () {
-  var self = this
+  let self = this
   this.renderer = new THREE.WebGLRenderer()
   this.renderer.setClearColor(0x9ef6ff)
   this.renderer.setPixelRatio(window.devicePixelRatio)
@@ -127,12 +218,12 @@ APP.prototype.scenario = function () {
 
 //Draw floor
 APP.prototype.bottom = function () {
-  var geometry = new THREE.PlaneGeometry(20000, 20000, 100, 100)
+  let geometry = new THREE.PlaneGeometry(20000, 20000, 100, 100)
   geometry.rotateX(-Math.PI / 2)
 
-  var textureLoader = new THREE.TextureLoader()
-  var texture = textureLoader.load('images/misc/grass.png')
-  var material = new THREE.MeshPhongMaterial({
+  let textureLoader = new THREE.TextureLoader()
+  let texture = textureLoader.load('images/misc/grass.png')
+  let material = new THREE.MeshPhongMaterial({
     color: 0xaaaaaa,
     specular: 0x000000,
     map: texture
@@ -142,49 +233,49 @@ APP.prototype.bottom = function () {
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping
   texture.repeat.set(800, 800)
 
-  var mesh = new THREE.Mesh(geometry, material)
+  let mesh = new THREE.Mesh(geometry, material)
   this.scene.add(mesh)
 }
 
 // Draw a wall
 APP.prototype.wall = function (x, z, angle) {
-  var geometry = new THREE.PlaneGeometry(this.wallWidth, this.wallHeight, 100, 100)
+  let geometry = new THREE.PlaneGeometry(this.wallWidth, this.wallHeight, 100, 100)
   geometry.rotateY(angle)
 
-  var textureLoader = new THREE.TextureLoader()
-  var texture = textureLoader.load('images/misc/wall.jpg')
+  let textureLoader = new THREE.TextureLoader()
+  let texture = textureLoader.load('images/misc/wall.jpg')
 
-  var material = new THREE.MeshBasicMaterial({
+  let material = new THREE.MeshBasicMaterial({
     map: texture
   })
   
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping
   texture.repeat.set(20, 2)
 
-  var mesh = new THREE.Mesh(geometry, material)
+  let mesh = new THREE.Mesh(geometry, material)
   this.scene.add(mesh)
   mesh.position.setX(x).setY(100).setZ(z)
 }
 
 // Create Pseudo-Pommel
 APP.prototype.sphere = function (callback) {
-  // var listener = new THREE.AudioListener()
+  // let listener = new THREE.AudioListener()
   // this.camera.add(listener)
 
-  // var sound = new THREE.PositionalAudio(listener)
+  // let sound = new THREE.PositionalAudio(listener)
   // sound.setLoop(1)
-  // var audioLoader = new THREE.AudioLoader()
+  // let audioLoader = new THREE.AudioLoader()
   // audioLoader.load('sounds/hedwig.mp3', function (buffer) {
   //   sound.setBuffer(buffer)
   //   sound.setRefDistance(45)
   //   sound.play()
   // })
 
-  var geometry = new THREE.SphereGeometry(1, 6, 6)
-  var material = new THREE.MeshBasicMaterial({
+  let geometry = new THREE.SphereGeometry(1, 6, 6)
+  let material = new THREE.MeshBasicMaterial({
     color: 0x000000
   })
-  var obj = new THREE.Mesh(geometry, material)
+  let obj = new THREE.Mesh(geometry, material)
   if (callback != undefined)
     callback(obj)
   this.scene.add(obj)
@@ -193,10 +284,10 @@ APP.prototype.sphere = function (callback) {
 
 // Create Pseudo-Arm
 APP.prototype.arm = function (callback, callback2) {
-  var obj = new THREE.Object3D()
+  let obj = new THREE.Object3D()
   
-  var geometry = new THREE.BoxGeometry(1, 1, 10)
-  var material = new THREE.MeshBasicMaterial({
+  let geometry = new THREE.BoxGeometry(1, 1, 10)
+  let material = new THREE.MeshBasicMaterial({
     color: 0xA98765
   })
   obj.add (new THREE.Mesh(geometry, material))
@@ -205,12 +296,12 @@ APP.prototype.arm = function (callback, callback2) {
   material = new THREE.MeshBasicMaterial({
     color: 0xA98775
   })
-  var hand = new THREE.Object3D()
+  let hand = new THREE.Object3D()
   hand.add(new THREE.Mesh(geometry, material))
   
   geometry = new THREE.BoxGeometry(1.4, 0.5, 0.5)
   
-  var finger = new THREE.Mesh(geometry, material)
+  let finger = new THREE.Mesh(geometry, material)
   finger.position.setX(-1.5).setZ(1)
   hand.add(finger)
 
