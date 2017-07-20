@@ -6,13 +6,14 @@ var geometry, material, mesh
 var blocker = document.getElementById('blocker')
 var instructions = document.getElementById('instructions')
 var pspommel, stick, arm, hand, handSphere
-var camStart = new THREE.Vector3(0, 10, 30)
+var camStart = new THREE.Vector3(0, 30, 30)
 var camStLookAt = new THREE.Vector3(0, 0, 0)
 var mixer = []
 
-var animations = {}
+var sounds = []
+var soundsPlaying = false
 
-var initialBCP = new THREE.Vector3(randCoordinate(20), 20, randCoordinate(20))
+var initialBCP = new THREE.Vector3(randCoordinate(20), 40, randCoordinate(20))
 var finalBCP
 
 var curve = new THREE.CubicBezierCurve3(
@@ -29,16 +30,16 @@ app.obj('models/wolf').scale(0.05).load()
 
 app.json('models/golden-snitch/animation/golden-snitch')
   .as('snitch')
-  .skinning([ 0xFFD700, 0xFFD700 ])
+  .skinning([0xFFD700, 0xFFD700])
   .after(character => {
     app.scene.add(character)
     character.position.setX(initialBCP.x).setY(initialBCP.y).setZ(initialBCP.z)
     character.lookAt(curve.getPointAt(curveInc))
-    app.mp3('sounds/hedwig')
+    app.mp3('sounds/golden_snitch')
       .to(character)
       .after(x => {
         character.sound(0).setRefDistance(45)
-        character.sound(0).play()
+        sounds.push(character.sound(0))
       })
       .load()
     character.animation(0).play()
@@ -49,20 +50,20 @@ app.json('models/arms/arms')
   .skinning([0xE3B186, 0xE3B186])
   .after(character => {
     app.camera.add(character)
-    character.translateX(0).translateZ(0).translateY(-6).scale.set(2,2,2)
+    character.translateX(0).translateZ(0).translateY(-6).scale.set(2, 2, 2)
     character.animation('rest').setLoop(THREE.LoopOnce, 0).play()
   })
   .load()
 
 app.json('models/arms/broom')
-  .skinning([ 0x6A3E25 ])
+  .skinning([0x6A3E25])
   .after(function (b) {
     app.camera.add(b)
-    b.translateX(0).translateZ(0).translateY(-6).scale.set(2,2,2)
+    b.translateX(0).translateZ(0).translateY(-6).scale.set(2, 2, 2)
   })
   .load()
 
-  // Pseudo-pommel
+// Pseudo-pommel
 app.sphere(obj => {
   // obj.position.setX(initialBCP.x).setY(initialBCP.y).setZ(initialBCP.z)
   obj.position.setX(10).setY(14)
@@ -73,13 +74,14 @@ app.arm(obj => {
   arm = obj[0]
   hand = obj[1]
 }, obj => {
-  obj.rotateX(Math.PI/8).rotateZ(Math.PI/20)
+  obj.rotateX(Math.PI / 8).rotateZ(Math.PI / 20)
 })
 
 app.obj('models/stadium/QuiddichStadium')
   .before(obj => {
-    obj.position.setZ(-5000)
+    obj.position.setZ(-5000).setY(-770)
   })
+  .scale(5)
   .load()
 
 app.png('models/witch-fire').after(texture => {
@@ -92,16 +94,16 @@ app.png('models/witch-fire').after(texture => {
 }).load()
 
 app.obj('models/deer')
-   .scale(0.01)
-   .before(obj => {
-      obj.position.setX(10)
-      obj.ambient = new THREE.Vector3(0, 1, 0)
-      obj.diffuse = new THREE.Vector3(0.7, 0.7, 0.7)
-      obj.specular = new THREE.Vector3(0.6, 0.6, 0.6)
-      obj.shininess = 100.0
-   })
-   .after(shader)
-   .load()
+  .scale(0.01)
+  .before(obj => {
+    obj.position.setX(10)
+    obj.ambient = new THREE.Vector3(0, 1, 0)
+    obj.diffuse = new THREE.Vector3(0.7, 0.7, 0.7)
+    obj.specular = new THREE.Vector3(0.6, 0.6, 0.6)
+    obj.shininess = 100.0
+  })
+  .after(shader)
+  .load()
 
 function shader(obj) {
   var uniforms = THREE.UniformsUtils.merge([
@@ -150,13 +152,14 @@ function shader(obj) {
   })
 }
 
-function randCoordinate(limit, pos) {
-  return (limit || scenarioSize) / 2 * Math.random() * (pos || Math.random() > 0.5 ? 1 : -1)
+function randCoordinate(range, lowerBound, pos) {
+  return (lowerBound || 0) + (range || scenarioSize / 3) * Math.random() *
+         (pos || Math.random() > 0.5 ? 1 : -1)
 }
 
 function randVec() {
   return new THREE.Vector3(randCoordinate(),
-    randCoordinate(scenarioHeight, true),
+    randCoordinate(scenarioHeight-30, 30, true),
     randCoordinate())
 }
 
@@ -165,7 +168,7 @@ pointerlock.check(() => {}, err)
 
 document.exitPointerLock = document.exitPointerLock ||
   document.mozExitPointerLock ||
-	document.webkitExitPointerLock;
+  document.webkitExitPointerLock;
 
 function err() {
   instructions.innerHTML = 'Your browser doesn\'t seem to support Pointer Lock API'
@@ -185,7 +188,7 @@ instructions.addEventListener('click', function (event) {
 pointerlock.onError(() => {})
 
 controls = new THREE.PointerLockControls(app.camera)
-controls.getObject().translateZ(30)
+controls.getObject().position.copy(camStart)
 app.scene.add(controls.getObject())
 
 app.camera.add(arm)
@@ -201,8 +204,24 @@ var controlsEnabled = false
 app.draw(() => {
   if (!controlsEnabled) {
     prevTime = performance.now()
+
+    if (soundsPlaying) {
+      sounds.forEach(sound => {
+        sound.pause()
+      })
+      soundsPlaying = false
+    }
+
     return false
   }
+
+  if (!soundsPlaying) {
+    sounds.forEach(sound => {
+        sound.play()
+    })
+    soundsPlaying = true
+  }
+
   movePseudoPommel()
   movePommel()
   moveCamera()
@@ -229,7 +248,7 @@ function movePseudoPommel() {
     signal[1] *= -1
 }
 
-function movePommel () {
+function movePommel() {
   app.get('snitch').position.copy(curve.getPointAt(curveTime += curveInc))
   if (Math.abs(curveTime - 0.9996) < 0.0005) {
     curveTime = 0
@@ -283,32 +302,31 @@ function moveCamera() {
 
   if (camera.position.y >= maxCoord[1] && velocity.y > 0.0)
     velocity.y = 0.0
-  else if (camera.position.y <= 30.00 && velocity.y < 0.0 || camera.position.y + 30.00 >= maxCoord[1] && velocity.y > 0.0)
+  else if (camera.position.y <= 60.00 && velocity.y < 0.0 || camera.position.y + 30.00 >= maxCoord[1] && velocity.y > 0.0)
     velocity.y *= 0.9
 
   camera.translateX(velocity.x * delta);
   camera.translateY(velocity.y * delta);
   camera.translateZ(velocity.z * delta);
 
-  if (camera.position.y < 10) {
+  if (camera.position.y < 30) {
     velocity.y = 0;
-    camera.position.y = 10;
+    camera.position.y = 30;
   }
 
   //arm.
-// app.load('models/nimbus2000.obj', 0.06, obj => {
-//   obj.position.setX(20).setY(4.5).setZ(2)
-//   stick = obj
-// }, obj => {
-//   obj.rotateY(Math.PI / 4).rotateZ(-Math.PI / 4)
-// })
-visible = MouseClick.right
+  // app.load('models/nimbus2000.obj', 0.06, obj => {
+  //   obj.position.setX(20).setY(4.5).setZ(2)
+  //   stick = obj
+  // }, obj => {
+  //   obj.rotateY(Math.PI / 4).rotateZ(-Math.PI / 4)
+  // })
+  visible = MouseClick.right
 
   var handPos = new THREE.Vector3()
   //handPos.setFromMatrixPosition(hand.matrixWorld)
 
-  if (arm.visible && app.get('snitch').position.distanceTo(handPos) < 5)
-  {
+  if (arm.visible && app.get('snitch').position.distanceTo(handPos) < 5) {
     document.exitPointerLock();
     camera.position.copy(camStart)
     velocity.x = velocity.y = velocity.z = 0
