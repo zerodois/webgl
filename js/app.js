@@ -18,6 +18,10 @@ function APP(WALLWIDTH, WALLHEIGHT) {
   this.camera.updateProjectionMatrix()
   this.camera.position.z = 0
 
+  // Camera listener
+  var listener = new THREE.AudioListener()
+  this.camera.add(listener)
+
   //Loader manager
   this.manager = new THREE.LoadingManager()
   this.manager.onLoad = onLoad
@@ -25,12 +29,12 @@ function APP(WALLWIDTH, WALLHEIGHT) {
 
   //Private methods
   this.get = function (name) {
-    if (objects[ name ])
-      return objects[ name ]
+    if (objects[name])
+      return objects[name]
     return null
   }
   this.set = function (name, obj) {
-    objects[ name ] = obj
+    objects[name] = obj
   }
 
   // Light
@@ -40,7 +44,7 @@ function APP(WALLWIDTH, WALLHEIGHT) {
   this.light.position.set(0.5, 1, 0.75)
   // this.light.position.set( 1, 0, 1 ).normalize()
   this.scene.add(this.light)
-  
+
   //Directional Light
   this.directional = new THREE.DirectionalLight(0xeeeeff)
   this.directional.position.set(0.5, 1, 0.75)
@@ -70,7 +74,7 @@ function APP(WALLWIDTH, WALLHEIGHT) {
   // this.scene.add( axes )
 
   // Objects
-  let objects = {}
+  let objects = {'listener': listener}
   this.fn = () => {}
   this.arr = []
 }
@@ -84,7 +88,8 @@ APP.prototype.draw = function (fn) {
 }
 
 APP.prototype.delta = function () {
-  return this.clock.getDelta() }
+  return this.clock.getDelta()
+}
 
 APP.prototype.texture = function (url, fn) {
   let texture = new THREE.Texture()
@@ -116,10 +121,15 @@ APP.prototype.obj = function (url) {
 APP.prototype.json = function (url) {
   let self = this
   let loader = new THREE.JSONLoader(this.manager)
-  function mesh (arr) {
+
+  function mesh(arr) {
     this.return(skinning)
-    function skinning (geometry, materials) {
-      let mats = arr ? arr.map(item => new THREE.MeshLambertMaterial({ color: item, skinning: true })) : materials
+
+    function skinning(geometry, materials) {
+      let mats = arr ? arr.map(item => new THREE.MeshLambertMaterial({
+        color: item,
+        skinning: true
+      })) : materials
       let character = new THREE.SkinnedMesh(geometry, mats)
       if (geometry.animations === undefined)
         return character
@@ -127,18 +137,18 @@ APP.prototype.json = function (url) {
       self.mixer.push(m)
       geometry.animations.forEach((a, i) => {
         let animation = null
-        animation = m.clipAction(geometry.animations[ i ])
+        animation = m.clipAction(geometry.animations[i])
         animation.setEffectiveWeight(1)
         animation.clampWhenFinished = true
         animation.enabled = true
         !character.actions ? character.actions = {} : false
-        character.actions[ i ] = animation
-        character.actions[ geometry.animations[ i ].name ] = character.actions[ i ]
+        character.actions[i] = animation
+        character.actions[geometry.animations[i].name] = character.actions[i]
       })
       character.animation = function (index) {
         if (index === undefined)
           return character.actions
-        return character.actions[ index ]
+        return character.actions[index]
       }
       return character
     }
@@ -151,21 +161,27 @@ APP.prototype.json = function (url) {
 
 APP.prototype.global = function (ext, loader, url) {
   let self = this
-  let prop = { before: [], after: [] }
-  function add (prop, fn) {
-    this[ prop ] = fn
+  let prop = {
+    before: [],
+    after: []
+  }
+
+  function add(prop, fn) {
+    this[prop] = fn
     return this
   }
-  function construct (name) {
+
+  function construct(name) {
     return function (fn) {
-      if (Array.isArray(prop[ name ]))
-        prop[ name ].push(fn)
+      if (Array.isArray(prop[name]))
+        prop[name].push(fn)
       else
-        prop[ name ] = fn
+        prop[name] = fn
       return this
     }
   }
-  function load (callback) {
+
+  function load(callback) {
     let name = url.split('/').slice(-1).pop()
     loader.load(`${url}.${ext}`, (obj, mat) => {
       if (prop.return) {
@@ -226,7 +242,7 @@ APP.prototype.render = function () {
   const render = () => {
     requestAnimationFrame(render)
     let delta = self.delta()
-    if(this.fn() !== false)
+    if (this.fn() !== false)
       self.mixer.forEach(m => m.update(delta))
     self.renderer.render(self.scene, self.camera)
   }
@@ -274,7 +290,7 @@ APP.prototype.wall = function (x, z, angle) {
   let material = new THREE.MeshBasicMaterial({
     map: texture
   })
-  
+
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping
   texture.repeat.set(20, 2)
 
@@ -285,18 +301,6 @@ APP.prototype.wall = function (x, z, angle) {
 
 // Create Pseudo-Pommel
 APP.prototype.sphere = function (callback) {
-  // let listener = new THREE.AudioListener()
-  // this.camera.add(listener)
-
-  // let sound = new THREE.PositionalAudio(listener)
-  // sound.setLoop(1)
-  // let audioLoader = new THREE.AudioLoader()
-  // audioLoader.load('sounds/hedwig.mp3', function (buffer) {
-  //   sound.setBuffer(buffer)
-  //   sound.setRefDistance(45)
-  //   sound.play()
-  // })
-
   let geometry = new THREE.SphereGeometry(1, 6, 6)
   let material = new THREE.MeshBasicMaterial({
     color: 0x000000
@@ -311,12 +315,12 @@ APP.prototype.sphere = function (callback) {
 // Create Pseudo-Arm
 APP.prototype.arm = function (callback, callback2) {
   let obj = new THREE.Object3D()
-  
+
   let geometry = new THREE.BoxGeometry(1, 1, 10)
   let material = new THREE.MeshBasicMaterial({
     color: 0xA98765
   })
-  obj.add (new THREE.Mesh(geometry, material))
+  obj.add(new THREE.Mesh(geometry, material))
 
   geometry = new THREE.BoxGeometry(1.8, 0.5, 3)
   material = new THREE.MeshBasicMaterial({
@@ -324,9 +328,9 @@ APP.prototype.arm = function (callback, callback2) {
   })
   let hand = new THREE.Object3D()
   hand.add(new THREE.Mesh(geometry, material))
-  
+
   geometry = new THREE.BoxGeometry(1.4, 0.5, 0.5)
-  
+
   let finger = new THREE.Mesh(geometry, material)
   finger.position.setX(-1.5).setZ(1)
   hand.add(finger)
@@ -340,6 +344,6 @@ APP.prototype.arm = function (callback, callback2) {
   if (callback2 != undefined)
     callback2(obj)
 
-  hand.rotateX(Math.PI/6).rotateZ(-Math.PI/6).translateY(0.5).translateX(-0.3)
-  finger.rotateY(-Math.PI/4).rotateZ(Math.PI/8).translateZ(-0.6).translateX(-0.3)
+  hand.rotateX(Math.PI / 6).rotateZ(-Math.PI / 6).translateY(0.5).translateX(-0.3)
+  finger.rotateY(-Math.PI / 4).rotateZ(Math.PI / 8).translateZ(-0.6).translateX(-0.3)
 }
