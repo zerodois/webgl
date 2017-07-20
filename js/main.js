@@ -90,8 +90,8 @@ mtlLoader.load('quiddich_stadium.mtl', function(materials) {
   }, () => {}, err => console.log(err));
 });
 
-app.png('models/witch-fire').after(texture => {
-  app.obj('models/witch')
+app.png('models/witch/witch-fire').after(texture => {
+  app.obj('models/witch/witch')
     .before(obj => {
       obj.position.setX(-10)
     })
