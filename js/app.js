@@ -131,8 +131,9 @@ APP.prototype.mp3 = function (url) {
     })
     return this;
   }
-  return this.load('mp3', loader, url)
+  return this.global('mp3', loader, url)
     .add('to', to)
+    .return(x => x)
 }
 
 APP.prototype.json = function (url) {
@@ -219,45 +220,6 @@ APP.prototype.global = function (ext, loader, url) {
     after: construct('after'),
     scale: construct('scale'),
     return: construct('return'),
-    as: construct('as')
-  }
-}
-
-APP.prototype.load = function (ext, loader, url) {
-  let self = this
-  let prop = { before: [], after: [] }
-  function add (prop, fn) {
-    this[ prop ] = fn
-    return this
-  }
-  function construct (name) {
-    return function (fn) {
-      if (Array.isArray(prop[ name ]))
-        prop[ name ].push(fn)
-      else
-        prop[ name ] = fn
-      return this
-    }
-  }
-  function load (callback) {
-    let name = url.split('/').slice(-1).pop()
-    loader.load(`${url}.${ext}`, (obj, mat) => {
-      if (prop.scale)
-        obj.scale.set(prop.scale, prop.scale, prop.scale)
-      if (prop.texture)
-        obj.traverse(function (child) {
-          if (child instanceof THREE.Mesh)
-            child.material.map = prop.texture
-        })
-      prop.after.forEach(fn => fn(obj, mat))
-    })
-  }
-  return {
-    add,
-    load,
-    texture: construct('texture'),
-    after: construct('after'),
-    scale: construct('scale'),
     as: construct('as')
   }
 }
