@@ -1,30 +1,30 @@
-var scenarioSize = 5000
-var scenarioHeight = 400
-var app = new APP(scenarioSize, scenarioHeight)
-var controls
-var geometry, material, mesh
-var blocker = document.getElementById('blocker')
-var instructions = document.getElementById('instructions')
-var pspommel, stick, arm, hand, handSphere
-var camStart = new THREE.Vector3(0, 30, 30)
-var camStLookAt = new THREE.Vector3(0, 0, 0)
-var mixer = []
+let scenarioSize = 5000
+let scenarioHeight = 400
+let app = new APP(scenarioSize, scenarioHeight)
+let controls
+let geometry, material, mesh
+let blocker = document.getElementById('blocker')
+let instructions = document.getElementById('instructions')
+let pspommel, stick, arm, hand, handSphere
+let camStart = new THREE.Vector3(0, 30, 30)
+let camStLookAt = new THREE.Vector3(0, 0, 0)
+let mixer = []
 
-var sounds = []
-var soundsPlaying = false
+let sounds = []
+let soundsPlaying = false
 
-var initialBCP = new THREE.Vector3(randCoordinate(20), 40, randCoordinate(20))
-var finalBCP
+let initialBCP = new THREE.Vector3(randCoordinate(20), 40, randCoordinate(20))
+let finalBCP
 
-var curve = new THREE.CubicBezierCurve3(
+let curve = new THREE.CubicBezierCurve3(
   initialBCP,
   randVec(),
   randVec(),
   finalBCP = randVec()
 )
 
-var curveTime = 0
-var curveInc = 0.001
+let curveTime = 0
+let curveInc = 0.001
 
 app.obj('models/wolf').scale(0.05).load()
 
@@ -138,7 +138,7 @@ app.mp3('sounds/hedwig')
   .load()
 
 function shader(obj) {
-  var uniforms = THREE.UniformsUtils.merge([
+  let uniforms = THREE.UniformsUtils.merge([
     THREE.UniformsLib["lights"],
     {
       lightPosition: {
@@ -172,7 +172,7 @@ function shader(obj) {
     }
   ]);
 
-  var material = new THREE.ShaderMaterial({
+  let material = new THREE.ShaderMaterial({
     uniforms: uniforms,
     vertexShader: document.getElementById('vertex-shader').textContent,
     fragmentShader: document.getElementById('fragment-shader').textContent,
@@ -195,7 +195,7 @@ function randVec() {
     randCoordinate())
 }
 
-var pointerlock = new Pointerlock()
+let pointerlock = new Pointerlock()
 pointerlock.check(() => {}, err)
 
 document.exitPointerLock = document.exitPointerLock ||
@@ -207,7 +207,7 @@ function err() {
 }
 
 pointerlock.onChange(function (event) {
-  var lock = pointerlock.hasLock()
+  let lock = pointerlock.hasLock()
   controlsEnabled = lock
   controls.enabled = lock
   blocker.style.display = lock ? 'none' : 'block'
@@ -231,7 +231,7 @@ app.scenario()
 KeyboardMove.aswd()
 MouseClick.mclick()
 
-var controlsEnabled = false
+let controlsEnabled = false
 
 app.draw(() => {
   if (!controlsEnabled) {
@@ -262,9 +262,9 @@ app.draw(() => {
   moveCamera()
 })
 
-var signal = [1, -1]
-var inc = [0.4, 0.1, 0.4]
-var radio = 10
+let signal = [1, -1]
+let inc = [0.4, 0.1, 0.4]
+let radio = 10
 
 function movePseudoPommel() {
   if (Math.abs(pspommel.position.x) <= Math.abs(pspommel.position.z)) {
@@ -297,16 +297,16 @@ function movePommel() {
   app.get('snitch').lookAt(curve.getPointAt(curveTime + curveInc))
 }
 
-var prevTime = performance.now()
-var velocity = new THREE.Vector3()
+let prevTime = performance.now()
+let velocity = new THREE.Vector3()
 
-var startSpeed = 800.00
-var maxCoord = [50.00, 4000.00/*450.00*/, 50.00]
-var animatingArm = false
-var armVisible = false
+let startSpeed = 800.00
+let maxCoord = [50.00, 4000.00/*450.00*/, 50.00]
+let animatingArm = false
+let armVisible = false
 
 function moveCamera() {
-  var camera = controls.getObject()
+  let camera = controls.getObject()
 
   app.get('witch').rotateY(0.01)
 
@@ -315,9 +315,9 @@ function moveCamera() {
     velocity.x = velocity.y = velocity.z = 0
   }
 
-  var time = performance.now()
-  var delta = (time - prevTime) / 1000
-  var sft = KeyboardMove.keys.Sft
+  let time = performance.now()
+  let delta = (time - prevTime) / 1000
+  let sft = KeyboardMove.keys.Sft
   velocity.x -= velocity.x * 10.0 * delta
   velocity.z -= velocity.z * 10.0 * delta
 
@@ -353,6 +353,8 @@ function moveCamera() {
 
   if (MouseClick.right && !animatingArm && !armVisible) {
     animatingArm = true
+    app.get('arms').animation('rest').stop()
+    app.get('arms').animation('back').stop()
     app.get('arms').animation('get').setLoop(THREE.LoopOnce, 0).play()
     setTimeout(function() {
         animatingArm = false
@@ -363,6 +365,7 @@ function moveCamera() {
   }
   else if (!MouseClick.right && !animatingArm && armVisible) {
     animatingArm = true
+    app.get('arms').animation('get').stop()
     app.get('arms').animation('back').setLoop(THREE.LoopOnce, 0).play()
     setTimeout(function() {
         animatingArm = false
@@ -372,10 +375,10 @@ function moveCamera() {
     )
   }
 
-  var handPos = new THREE.Vector3()
-  // handPos.setFromMatrixPosition(hand.matrixWorld)
+  let handPos = new THREE.Vector3()
+  handPos.setFromMatrixPosition(hand.matrixWorld)
 
-  if (arm.visible && app.get('snitch').position.distanceTo(handPos) < 5) {
+  if (armVisible && app.get('snitch').position.distanceTo(handPos) < 5) {
     document.exitPointerLock();
     camera.position.copy(camStart)
     velocity.x = velocity.y = velocity.z = 0
@@ -391,12 +394,12 @@ function moveCamera() {
   prevTime = time
 }
 
-var curVolume = 0.07, nextVolume
+let curVolume = 0.07, nextVolume
 
 function fadeSound(volume) {
   nextVolume = volume
 
-  var diff = curVolume - nextVolume
+  let diff = curVolume - nextVolume
   if (Math.abs(diff) > 0.009) {
     curVolume += (diff > 0.00 ? -1 : 1) * (diff > 0.2 ? 0.03 : 0.01)
     app.camera.sound('wind').setVolume(curVolume)
