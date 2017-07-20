@@ -17,6 +17,8 @@ function APP(WALLWIDTH, WALLHEIGHT) {
   this.camera = new THREE.PerspectiveCamera(viewAngle, aspectRatio, near, far)
   this.camera.updateProjectionMatrix()
   this.camera.position.z = 0
+  this.listener = new THREE.AudioListener()
+  this.camera.add(this.listener)
 
   // Camera listener
   var listener = new THREE.AudioListener()
@@ -118,6 +120,26 @@ APP.prototype.obj = function (url) {
   return this.global('obj', loader, url)
 }
 
+APP.prototype.mp3 = function (url) {
+  let self   = this
+  let loader = new THREE.AudioLoader(this.manager)
+  function to (character) {
+    this.after(sound => {
+      let positional = new THREE.PositionalAudio(self.listener)
+      positional.setLoop(1)
+      positional.setBuffer(sound)
+      if (character.sounds === undefined)
+        character.sounds = []
+      character.sounds.push(positional)
+      character.sound = index => character.sounds[ index ]
+      character.add(positional)
+    })
+    return this;
+  }
+  return this.load('mp3', loader, url)
+    .add('to', to)
+}
+
 APP.prototype.json = function (url) {
   let self = this
   let loader = new THREE.JSONLoader(this.manager)
@@ -217,18 +239,43 @@ APP.prototype.global = function (ext, loader, url) {
   }
 }
 
-APP.prototype.load = function (url, scale, callback, endcallback) {
-  let loader = new THREE.OBJLoader(this.manager)
+APP.prototype.load = function (ext, loader, url) {
   let self = this
-  loader.load(url, obj => {
-    obj.scale.set(scale, scale, scale)
-    obj.position.set(0, this.floor, 0)
-    if (callback != undefined)
-      callback(obj)
-    self.scene.add(obj)
-    if (endcallback != undefined)
-      endcallback(obj)
-  })
+  let prop = { before: [], after: [] }
+  function add (prop, fn) {
+    this[ prop ] = fn
+    return this
+  }
+  function construct (name) {
+    return function (fn) {
+      if (Array.isArray(prop[ name ]))
+        prop[ name ].push(fn)
+      else
+        prop[ name ] = fn
+      return this
+    }
+  }
+  function load (callback) {
+    let name = url.split('/').slice(-1).pop()
+    loader.load(`${url}.${ext}`, (obj, mat) => {
+      if (prop.scale)
+        obj.scale.set(prop.scale, prop.scale, prop.scale)
+      if (prop.texture)
+        obj.traverse(function (child) {
+          if (child instanceof THREE.Mesh)
+            child.material.map = prop.texture
+        })
+      prop.after.forEach(fn => fn(obj, mat))
+    })
+  }
+  return {
+    add,
+    load,
+    texture: construct('texture'),
+    after: construct('after'),
+    scale: construct('scale'),
+    as: construct('as')
+  }
 }
 
 APP.prototype.render = function () {

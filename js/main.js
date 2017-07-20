@@ -10,7 +10,8 @@ var camStart = new THREE.Vector3(0, 30, 30)
 var camStLookAt = new THREE.Vector3(0, 0, 0)
 var mixer = []
 
-var animations = {}
+var sounds = []
+var soundsPlaying = false
 
 var initialBCP = new THREE.Vector3(randCoordinate(20), 40, randCoordinate(20))
 var finalBCP
@@ -34,7 +35,13 @@ app.json('models/golden-snitch/animation/golden-snitch')
     app.scene.add(character)
     character.position.setX(initialBCP.x).setY(initialBCP.y).setZ(initialBCP.z)
     character.lookAt(curve.getPointAt(curveInc))
-    addSound(character, 'sounds/golden_snitch.mp3')
+    app.mp3('sounds/golden_snitch')
+      .to(character)
+      .after(x => {
+        character.sound(0).setRefDistance(45)
+        sounds.push(character.sound(0))
+      })
+      .load()
     character.animation(0).play()
   })
   .load()
@@ -145,24 +152,6 @@ function shader(obj) {
   })
 }
 
-var snitchSound
-var soundsPlaying = false
-
-function addSound(obj, url) {
-  var sound = new THREE.PositionalAudio(app.get('listener'))
-  sound.setLoop(1)
-
-  var audioLoader = new THREE.AudioLoader()
-  audioLoader.load(url, function (buffer) {
-    sound.setBuffer(buffer)
-    sound.setRefDistance(45)
-    // sound.play()
-  })
-
-  snitchSound = sound
-  obj.add(sound)
-}
-
 function randCoordinate(range, lowerBound, pos) {
   return (lowerBound || 0) + (range || scenarioSize / 3) * Math.random() *
          (pos || Math.random() > 0.5 ? 1 : -1)
@@ -215,15 +204,21 @@ var controlsEnabled = false
 app.draw(() => {
   if (!controlsEnabled) {
     prevTime = performance.now()
+
     if (soundsPlaying) {
-      snitchSound.pause()
+      sounds.forEach(sound => {
+        sound.pause()
+      })
       soundsPlaying = false
     }
+
     return false
   }
 
   if (!soundsPlaying) {
-    snitchSound.play()
+    sounds.forEach(sound => {
+        sound.play()
+    })
     soundsPlaying = true
   }
 
