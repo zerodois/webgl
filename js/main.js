@@ -109,6 +109,30 @@ app.obj('models/deer')
   .after(shader)
   .load()
 
+app.mp3('sounds/wind')
+  .to(app.camera)
+  .as('wind')
+  .after(x => {
+    app.camera.sound('wind').position.setZ(1)
+    sounds.push(app.camera.sound('wind'))
+    app.camera.sound('wind').setVolume(0.07)
+    if (controlsEnabled)
+      app.camera.sound('wind').play()
+  })
+  .load()
+
+app.mp3('sounds/hedwig')
+  .to(app.camera)
+  .as('music')
+  .after(x => {
+    app.camera.sound('music').position.setZ(1)
+    sounds.push(app.camera.sound('music'))
+    app.camera.sound('music').setVolume(1)
+    if (controlsEnabled)
+      app.camera.sound('music').play()
+  })
+  .load()
+
 function shader(obj) {
   var uniforms = THREE.UniformsUtils.merge([
     THREE.UniformsLib["lights"],
@@ -211,7 +235,10 @@ app.draw(() => {
 
     if (soundsPlaying) {
       sounds.forEach(sound => {
-        sound.pause()
+        try {
+          sound.pause()
+        }
+        catch (e) {}
       })
       soundsPlaying = false
     }
@@ -221,7 +248,7 @@ app.draw(() => {
 
   if (!soundsPlaying) {
     sounds.forEach(sound => {
-        sound.play()
+      sound.play()
     })
     soundsPlaying = true
   }
@@ -337,7 +364,25 @@ function moveCamera() {
     arm.visible = false
   }
 
+  if (Math.abs(velocity.x * delta) > 1 || Math.abs(velocity.y * delta) > 1 ||
+      Math.abs(velocity.z * delta) > 1)
+    fadeSound(sft ? 0.8 : 0.2)
+  else
+    fadeSound(0.07)
+
   prevTime = time
+}
+
+var curVolume = 0.07, nextVolume
+
+function fadeSound(volume) {
+  nextVolume = volume
+
+  var diff = curVolume - nextVolume
+  if (Math.abs(diff) > 0.009) {
+    curVolume += (diff > 0.00 ? -1 : 1) * (diff > 0.2 ? 0.03 : 0.01)
+    app.camera.sound('wind').setVolume(curVolume)
+  }
 }
 
 window.addEventListener('resize', onWindowResize, false)

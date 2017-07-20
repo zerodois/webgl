@@ -128,6 +128,7 @@ APP.prototype.mtl = function (url) {
 
 APP.prototype.mp3 = function (url) {
   let self   = this
+  let size   = 0
   let loader = new THREE.AudioLoader(this.manager)
   function to (character) {
     this.after(sound => {
@@ -135,9 +136,10 @@ APP.prototype.mp3 = function (url) {
       positional.setLoop(1)
       positional.setBuffer(sound)
       if (character.sounds === undefined)
-        character.sounds = []
-      character.sounds.push(positional)
-      character.sound = index => character.sounds[ index ]
+        character.sounds = {}
+      character.sounds[ size++ ] = positional
+      character.sounds[ this.prop.name ] = positional
+      character.sound = index => index === undefined ? character.sounds : character.sounds[ index ]
       character.add(positional)
     })
     return this;
@@ -210,6 +212,7 @@ APP.prototype.global = function (ext, loader, url) {
 
   function load(callback) {
     let name = url.split('/').slice(-1).pop()
+    prop.name = prop.as ? prop.as : name
     if (prop.path)
       loader.setPath(prop.path)
     if (prop.material)
@@ -217,9 +220,9 @@ APP.prototype.global = function (ext, loader, url) {
     loader.load(`${url}.${ext}`, (obj, mat) => {
       if (prop.return) {
         let ret = prop.return(obj)
+        self.set(prop.name, ret)
         prop.before.forEach(fn => fn(ret, mat))
         prop.after.forEach(fn => fn(ret, mat))
-        self.set(prop.as ? prop.as : name, ret)
         return true
       }
       if (prop.scale)
@@ -238,6 +241,7 @@ APP.prototype.global = function (ext, loader, url) {
   }
   return {
     add,
+    prop,
     load,
     path: construct('path'),
     before: construct('before'),
