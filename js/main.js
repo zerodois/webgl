@@ -34,7 +34,13 @@ app.json('models/golden-snitch/animation/golden-snitch')
     app.scene.add(character)
     character.position.setX(initialBCP.x).setY(initialBCP.y).setZ(initialBCP.z)
     character.lookAt(curve.getPointAt(curveInc))
-    addSound(character)
+    app.mp3('sounds/hedwig')
+      .to(character)
+      .after(x => {
+        character.sound(0).setRefDistance(45)
+        character.sound(0).play()
+      })
+      .load()
     character.animation(0).play()
   })
   .load()
@@ -142,22 +148,6 @@ function shader(obj) {
   obj.traverse(function (child) {
     child.material = material
   })
-}
-
-function addSound(obj) {
-  var listener = new THREE.AudioListener()
-  app.camera.add(listener)
-
-  var sound = new THREE.PositionalAudio(listener)
-  sound.setLoop(1)
-  var audioLoader = new THREE.AudioLoader()
-  audioLoader.load('sounds/hedwig.mp3', function (buffer) {
-    sound.setBuffer(buffer)
-    sound.setRefDistance(45)
-    sound.play()
-  })
-
-  obj.add(sound)
 }
 
 function randCoordinate(limit, pos) {
