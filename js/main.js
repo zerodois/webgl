@@ -115,9 +115,11 @@ app.mp3('sounds/wind')
   .to(app.camera)
   .as('wind')
   .after(x => {
-    app.get('wind').position.setZ(1)
-    sounds.push(app.get('wind'))
-    app.get('wind').setVolume(0.07)
+    app.camera.sound('wind').position.setZ(1)
+    sounds.push(app.camera.sound('wind'))
+    app.camera.sound('wind').setVolume(0.07)
+    if (controlsEnabled)
+      app.camera.sound('wind').play()
   })
   .load()
 
@@ -125,9 +127,11 @@ app.mp3('sounds/hedwig')
   .to(app.camera)
   .as('music')
   .after(x => {
-    app.get('music').position.setZ(1)
-    sounds.push(app.get('music'))
-    app.get('music').setVolume(1)
+    app.camera.sound('music').position.setZ(1)
+    sounds.push(app.camera.sound('music'))
+    app.camera.sound('music').setVolume(1)
+    if (controlsEnabled)
+      app.camera.sound('music').play()
   })
   .load()
 
@@ -233,7 +237,10 @@ app.draw(() => {
 
     if (soundsPlaying) {
       sounds.forEach(sound => {
-        sound.pause()
+        try {
+          sound.pause()
+        }
+        catch (e) {}
       })
       soundsPlaying = false
     }
@@ -243,7 +250,7 @@ app.draw(() => {
 
   if (!soundsPlaying) {
     sounds.forEach(sound => {
-        sound.play()
+      sound.play()
     })
     soundsPlaying = true
   }
@@ -376,7 +383,7 @@ function fadeSound(volume) {
   var diff = curVolume - nextVolume
   if (Math.abs(diff) > 0.009) {
     curVolume += (diff > 0.00 ? -1 : 1) * (diff > 0.2 ? 0.03 : 0.01)
-    app.get('wind').setVolume(curVolume)
+    app.camera.sound('wind').setVolume(curVolume)
   }
 }
 
