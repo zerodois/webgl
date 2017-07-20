@@ -93,12 +93,16 @@ app.mtl('quiddich_stadium')
     app.obj('quiddich_stadium')
       .path('models/pitch/')
       .material(materials)
+      .scale(10)
+      .after(obj => {
+        obj.position.setY(-1200)
+      })
       .load()
   })
   .load()
 
-app.png('models/witch-fire').after(texture => {
-  app.obj('models/witch')
+app.png('models/witch/witch-fire').after(texture => {
+  app.obj('models/witch/witch')
     .before(obj => {
       obj.position.setX(-10)
     })
@@ -306,7 +310,9 @@ var prevTime = performance.now()
 var velocity = new THREE.Vector3()
 
 var startSpeed = 800.00
-var maxCoord = [50.00, 450.00, 50.00]
+var maxCoord = [50.00, 4000.00/*450.00*/, 50.00]
+var animatingArm = false
+var armVisible = false
 
 function moveCamera() {
   var camera = controls.getObject()
@@ -354,17 +360,29 @@ function moveCamera() {
     camera.position.y = 30;
   }
 
-  //arm.
-  // app.load('models/nimbus2000.obj', 0.06, obj => {
-  //   obj.position.setX(20).setY(4.5).setZ(2)
-  //   stick = obj
-  // }, obj => {
-  //   obj.rotateY(Math.PI / 4).rotateZ(-Math.PI / 4)
-  // })
-  visible = MouseClick.right
+  if (MouseClick.right && !animatingArm && !armVisible) {
+    animatingArm = true
+    app.get('arms').animation('get').setLoop(THREE.LoopOnce, 0).play()
+    setTimeout(function() {
+        animatingArm = false
+        armVisible = true
+      },
+      app.get('arms').animation('get').duration * 1000 + 10
+    )
+  }
+  else if (!MouseClick.right && !animatingArm && armVisible) {
+    animatingArm = true
+    app.get('arms').animation('back').setLoop(THREE.LoopOnce, 0).play()
+    setTimeout(function() {
+        animatingArm = false
+        armVisible = false
+      },
+      app.get('arms').animation('back').duration * 1000 + 10
+    )
+  }
 
   var handPos = new THREE.Vector3()
-  //handPos.setFromMatrixPosition(hand.matrixWorld)
+  // handPos.setFromMatrixPosition(hand.matrixWorld)
 
   if (arm.visible && app.get('snitch').position.distanceTo(handPos) < 5) {
     document.exitPointerLock();

@@ -179,6 +179,7 @@ APP.prototype.json = function (url) {
         animation.setEffectiveWeight(1)
         animation.clampWhenFinished = true
         animation.enabled = true
+        animation.duration = geometry.animations[i].duration
         !character.actions ? character.actions = {} : false
         character.actions[i] = animation
         character.actions[geometry.animations[i].name] = character.actions[i]
@@ -284,10 +285,10 @@ APP.prototype.render = function () {
 // Draw scenario
 APP.prototype.scenario = function () {
   this.bottom()
-  this.wall(0, -this.wallWidth / 2, 0)
-  this.wall(0, this.wallWidth / 2, Math.PI)
-  this.wall(-this.wallWidth / 2, 0, Math.PI / 2)
-  this.wall(this.wallWidth / 2, 0, -Math.PI / 2)
+  // this.wall(0, -this.wallWidth / 2, 0)
+  // this.wall(0, this.wallWidth / 2, Math.PI)
+  // this.wall(-this.wallWidth / 2, 0, Math.PI / 2)
+  // this.wall(this.wallWidth / 2, 0, -Math.PI / 2)
 }
 
 //Draw floor
