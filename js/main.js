@@ -105,6 +105,26 @@ app.obj('models/deer')
   .after(shader)
   .load()
 
+app.mp3('sounds/wind')
+  .to(app.camera)
+  .as('wind')
+  .after(x => {
+    app.get('wind').position.setZ(1)
+    sounds.push(app.get('wind'))
+    app.get('wind').setVolume(0.07)
+  })
+  .load()
+
+app.mp3('sounds/hedwig')
+  .to(app.camera)
+  .as('music')
+  .after(x => {
+    app.get('music').position.setZ(1)
+    sounds.push(app.get('music'))
+    app.get('music').setVolume(1)
+  })
+  .load()
+
 function shader(obj) {
   var uniforms = THREE.UniformsUtils.merge([
     THREE.UniformsLib["lights"],
@@ -333,7 +353,25 @@ function moveCamera() {
     arm.visible = false
   }
 
+  if (Math.abs(velocity.x * delta) > 1 || Math.abs(velocity.y * delta) > 1 ||
+      Math.abs(velocity.z * delta) > 1)
+    fadeSound(sft ? 0.8 : 0.2)
+  else
+    fadeSound(0.07)
+
   prevTime = time
+}
+
+var curVolume = 0.07, nextVolume
+
+function fadeSound(volume) {
+  nextVolume = volume
+
+  var diff = curVolume - nextVolume
+  if (Math.abs(diff) > 0.009) {
+    curVolume += (diff > 0.00 ? -1 : 1) * (diff > 0.2 ? 0.03 : 0.01)
+    app.get('wind').setVolume(curVolume)
+  }
 }
 
 window.addEventListener('resize', onWindowResize, false)
