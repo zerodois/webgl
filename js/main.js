@@ -9,9 +9,18 @@ let pspommel, stick, arm, hand, handSphere
 let camStart = new THREE.Vector3(0, 30, 30)
 let camStLookAt = new THREE.Vector3(0, 0, 0)
 let mixer = []
-
 let sounds = []
 let soundsPlaying = false
+
+app.setOnLoad(atualize)
+function atualize (percent) {
+  document.querySelector('#bar .percent').style.setProperty('--percent', percent.toFixed(1) + '%')
+  if (Math.floor(percent) == 100) {
+    let div = document.getElementById('loading')
+    div.classList.add('hide')
+    window.setTimeout(() => div.style.display = 'none', 250)
+  }
+}
 
 let initialBCP = new THREE.Vector3(randCoordinate(20), 40, randCoordinate(20))
 let finalBCP

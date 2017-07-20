@@ -33,3 +33,47 @@ body {
   text-align: center;
   cursor: pointer;
 }
+
+#loading.hide {
+  opacity: 0;
+}
+#loading {
+  --primary: #F4D03F;
+  --secondary: black;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: var(--primary, tomato);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s linear;
+}
+
+#loading i {
+  height: 40%;
+  font-size: 15rem;
+  color: var(--secondary);
+}
+#bar {
+  --radius: 0.25rem;
+  display: block;
+  height: 0.5rem;
+  border-radius: var(--radius);
+  background-color: rgba(0, 0, 0, 0.5);
+  width: 30%;
+  margin-top: 3rem;
+  padding: 0;
+  overflow: hidden;
+}
+#bar .percent {
+  --percent: 0;
+  display: block;
+  width: var(--percent, 0);
+  height: 100%;
+  background-color: var(--secondary);
+  border-radius: var(--radius);
+  transition: all 1s linear;
+}

@@ -2,6 +2,8 @@ function APP(WALLWIDTH, WALLHEIGHT) {
   // Scene
   this.scene = new THREE.Scene()
   this.clock = new THREE.Clock()
+  this.toLoading = 0
+  this.loaded = 0
   this.floor = 0
   this.mixer = []
 
@@ -19,6 +21,7 @@ function APP(WALLWIDTH, WALLHEIGHT) {
   this.camera.position.z = 0
   this.listener = new THREE.AudioListener()
   this.camera.add(this.listener)
+  this.setOnLoad = fn => this.loaderFn = fn
 
   // Camera listener
   let listener = new THREE.AudioListener()
@@ -26,8 +29,8 @@ function APP(WALLWIDTH, WALLHEIGHT) {
 
   //Loader manager
   this.manager = new THREE.LoadingManager()
-  this.manager.onLoad = onLoad
-  this.manager.onProgress = onProgress
+  this.manager.onLoad = this.onLoad
+  this.manager.onProgress = this.onProgress
 
   //Private methods
   this.get = function (name) {
@@ -67,7 +70,7 @@ function APP(WALLWIDTH, WALLHEIGHT) {
   for (let i = 0; i < 6; i++)
     urls.push(imagePrefix + directions[i] + imageSuffix)
 
-  let reflectionCube = new THREE.CubeTextureLoader().load(urls)
+  let reflectionCube = new THREE.CubeTextureLoader(this.manager).load(urls)
   reflectionCube.format = THREE.RGBFormat
   this.scene.background = reflectionCube
 
@@ -81,7 +84,11 @@ function APP(WALLWIDTH, WALLHEIGHT) {
   this.arr = []
 }
 
-function onLoad() {}
+APP.prototype.onLoad = function () {
+  let percent = (this.loaded/this.toLoading)*100
+  if (this.loaderFn && !isNaN(percent))
+    this.loaderFn(percent)
+}
 
 function onProgress(url, item, total) {}
 
@@ -210,8 +217,8 @@ APP.prototype.global = function (ext, loader, url) {
       return this
     }
   }
-
-  function load(callback) {
+  function load() {
+    self.toLoading++
     let name = url.split('/').slice(-1).pop()
     prop.name = prop.as ? prop.as : name
     if (prop.path)
@@ -219,6 +226,8 @@ APP.prototype.global = function (ext, loader, url) {
     if (prop.material)
       loader.setMaterials(prop.material)
     loader.load(`${url}.${ext}`, (obj, mat) => {
+      self.loaded++
+      self.onLoad()
       if (prop.return) {
         let ret = prop.return(obj)
         self.set(prop.name, ret)
@@ -287,7 +296,7 @@ APP.prototype.bottom = function () {
   let geometry = new THREE.PlaneGeometry(20000, 20000, 100, 100)
   geometry.rotateX(-Math.PI / 2)
 
-  let textureLoader = new THREE.TextureLoader()
+  let textureLoader = new THREE.TextureLoader(this.manager)
   let texture = textureLoader.load('images/misc/grass.png')
   let material = new THREE.MeshPhongMaterial({
     color: 0xaaaaaa,
@@ -308,7 +317,7 @@ APP.prototype.wall = function (x, z, angle) {
   let geometry = new THREE.PlaneGeometry(this.wallWidth, this.wallHeight, 100, 100)
   geometry.rotateY(angle)
 
-  let textureLoader = new THREE.TextureLoader()
+  let textureLoader = new THREE.TextureLoader(this.manager)
   let texture = textureLoader.load('images/misc/wall.jpg')
 
   let material = new THREE.MeshBasicMaterial({
