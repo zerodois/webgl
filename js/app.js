@@ -120,6 +120,12 @@ APP.prototype.obj = function (url) {
   return this.global('obj', loader, url)
 }
 
+APP.prototype.mtl = function (url) {
+  let loader = new THREE.MTLLoader(this.manager)
+  return this.global('mtl', loader, url)
+    .return(x => x)
+}
+
 APP.prototype.mp3 = function (url) {
   let self   = this
   let loader = new THREE.AudioLoader(this.manager)
@@ -188,12 +194,10 @@ APP.prototype.global = function (ext, loader, url) {
     before: [],
     after: []
   }
-
   function add(prop, fn) {
     this[prop] = fn
     return this
   }
-
   function construct(name) {
     return function (fn) {
       if (Array.isArray(prop[name]))
@@ -206,6 +210,10 @@ APP.prototype.global = function (ext, loader, url) {
 
   function load(callback) {
     let name = url.split('/').slice(-1).pop()
+    if (prop.path)
+      loader.setPath(prop.path)
+    if (prop.material)
+      loader.setMaterials(prop.material)
     loader.load(`${url}.${ext}`, (obj, mat) => {
       if (prop.return) {
         let ret = prop.return(obj)
@@ -231,8 +239,10 @@ APP.prototype.global = function (ext, loader, url) {
   return {
     add,
     load,
+    path: construct('path'),
     before: construct('before'),
     texture: construct('texture'),
+    material: construct('material'),
     after: construct('after'),
     scale: construct('scale'),
     return: construct('return'),
