@@ -9,9 +9,18 @@ var pspommel, stick, arm, hand, handSphere
 var camStart = new THREE.Vector3(0, 30, 30)
 var camStLookAt = new THREE.Vector3(0, 0, 0)
 var mixer = []
-
 var sounds = []
 var soundsPlaying = false
+
+app.setOnLoad(atualize)
+function atualize (percent) {
+  document.querySelector('#bar .percent').style.setProperty('--percent', percent.toFixed(1) + '%')
+  if (Math.floor(percent) == 100) {
+    let div = document.getElementById('loading')
+    div.classList.add('hide')
+    window.setTimeout(() => div.style.display = 'none', 250)
+  }
+}
 
 var initialBCP = new THREE.Vector3(randCoordinate(20), 40, randCoordinate(20))
 var finalBCP
