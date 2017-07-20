@@ -77,12 +77,18 @@ app.arm(obj => {
   obj.rotateX(Math.PI / 8).rotateZ(Math.PI / 20)
 })
 
-app.obj('models/stadium/QuiddichStadium')
-  .before(obj => {
-    obj.position.setZ(-5000).setY(-770)
-  })
-  .scale(5)
-  .load()
+var mtlLoader = new THREE.MTLLoader();
+mtlLoader.setPath('models/pitch/');
+mtlLoader.load('quiddich_stadium.mtl', function(materials) {
+  materials.preload();
+  var objLoader = new THREE.OBJLoader();
+  objLoader.setMaterials(materials);
+  objLoader.setPath('models/pitch/');
+  objLoader.load('quiddich_stadium.obj', function(object) {
+    // object.position.y = -95;
+    app.scene.add(object);
+  }, () => {}, err => console.log(err));
+});
 
 app.png('models/witch-fire').after(texture => {
   app.obj('models/witch')
