@@ -4,7 +4,7 @@ let controls
 let geometry, material, mesh
 let blocker = document.getElementById('blocker')
 let instructions = document.getElementById('instructions')
-let pspommel, stick, arm, hand, handSphere
+let stick, arm, hand, handSphere
 let camStart = new THREE.Vector3(0, 30, 30)
 let camStLookAt = new THREE.Vector3(0, 0, 0)
 let mixer = []
@@ -20,6 +20,13 @@ function atualize (percent) {
     window.setTimeout(() => div.style.display = 'none', 250)
   }
 }
+
+let deerLights = []
+let iDLightsPos = []
+let fDLightsPos = []
+let curvesDLight = []
+
+createDeerLights()
 
 let initialBCP = new THREE.Vector3(randCoordinate(20), 40, randCoordinate(20))
 let finalBCP
@@ -82,13 +89,6 @@ app.json('models/arms/broom')
   })
   .load()
 
-// Pseudo-pommel
-app.sphere(obj => {
-  // obj.position.setX(initialBCP.x).setY(initialBCP.y).setZ(initialBCP.z)
-  obj.position.setX(10).setY(14)
-  pspommel = obj
-})
-
 app.mtl('quiddich_stadium')
   .path('models/pitch/')
   .after(materials => {
@@ -107,22 +107,30 @@ app.mtl('quiddich_stadium')
 
 app.png('models/witch/witch-fire').after(texture => {
   app.obj('models/witch/witch')
+    .scale(20)
     .before(obj => {
-      obj.position.setX(-10)
+      obj.position.setX(5900).setY(1070).setZ(-200)
+    })
+    .after(obj => {
+      obj.rotateY(-Math.PI / 3)
     })
     .texture(texture)
     .load()
 }).load()
 
 app.obj('models/deer')
-  .scale(0.01)
+  .scale(0.25)
   .before(obj => {
-    obj.ambient = new THREE.Vector3(0.2, 0.2, 1)
-    obj.diffuse = new THREE.Vector3(0.7, 0.7, 0.7)
-    obj.specular = new THREE.Vector3(0.6, 0.6, 0.6)
+    obj.position.setX(5900).setY(1070).setZ(100)
+    obj.ambient = new THREE.Vector3(0, 0, 1)
+    obj.diffuse = new THREE.Vector3(0.4, 0.4, 0.4)
+    obj.specular = new THREE.Vector3(0.5, 0.5, 0.5)
     obj.shininess = 100.0
   })
-  .after(shader)
+  .after(obj => {
+    shader
+    obj.rotateX(0.05).rotateY(Math.PI * 7/8).rotateZ(-Math.PI / 10)
+  })
   .load()
 
 app.mp3('sounds/wind')
@@ -204,6 +212,50 @@ function shader(obj) {
   })
 }
 
+function randDLightCoord(positive) {
+  return (positive ? 350 : 200) * Math.random() * (positive || Math.random() > 0.5 ? 1 : -1)
+}
+
+function randDLightVec() {
+  return new THREE.Vector3(5900 + randDLightCoord(), 1070 + randDLightCoord(true), 100 + randDLightCoord())
+}
+
+function createDeerLights() {
+  function createLight(color) {
+    var pointLight = new THREE.PointLight(color, 0.8, 300)
+    var geometry = new THREE.SphereGeometry(2, 24, 12)
+    var material = new THREE.MeshPhongMaterial({
+      color: 0xffffff,
+      specular: 0xffffff
+    })
+
+    var sphere = new THREE.Mesh(geometry, material)
+    pointLight.add(sphere)
+    return pointLight
+  }
+
+  let numLights = 20
+  while (numLights--) {
+    let pointLight = createLight(0x5555ff)
+    let pos = randDLightVec()
+    pointLight.position.copy(pos)
+    app.scene.add(pointLight)
+
+    deerLights.push(pointLight)
+    iDLightsPos.push(pos)
+
+    let endPos = randDLightVec()
+    fDLightsPos.push(endPos)
+    curvesDLight.push(
+      new THREE.CubicBezierCurve3(
+        pos,
+        randDLightVec(),
+        randDLightVec(),
+        endPos
+    ))
+  }
+}
+
 function randCoordinate(range, lowerBound, pos) {
   return (lowerBound || 0) + (range || 12345) * Math.random() *
          (pos || Math.random() > 0.5 ? 1 : -1)
@@ -281,33 +333,32 @@ app.draw(() => {
     soundsPlaying = true
   }
 
-  movePseudoPommel()
-  movePommel()
+  moveDLights()
+  moveSnitch()
   moveCamera()
 })
 
-let signal = [1, -1]
-let inc = [0.4, 0.1, 0.4]
-let radio = 10
+let DLcurveTime = 0
+let DLcurveInc = 0.003
 
-function movePseudoPommel() {
-  if (Math.abs(pspommel.position.x) <= Math.abs(pspommel.position.z)) {
-    pspommel.position.x += inc[0] * signal[1]
-    pspommel.position.z = Math.sqrt(radio * radio - Math.pow(pspommel.position.x, 2)) * signal[1]
-  } else {
-    pspommel.position.z -= inc[2] * signal[0]
-    pspommel.position.x = Math.sqrt(radio * radio - Math.pow(pspommel.position.z, 2)) * signal[0]
+function moveDLights() {
+  DLcurveTime += DLcurveInc
+  let ended = Math.abs(DLcurveTime - 0.999) < 0.002
+  for (i in deerLights) {
+    deerLights[i].position.copy(curvesDLight[i].getPointAt(DLcurveTime))
+    if (ended)
+      curvesDLight[i] = new THREE.CubicBezierCurve3(
+        iDLightsPos[i] = fDLightsPos[i],
+        randDLightVec(),
+        randDLightVec(),
+        fDLightsPos[i] = randDLightVec()
+      )
   }
-
-  pspommel.position.y -= inc[1] * signal[1]
-
-  if (Math.abs(pspommel.position.x) <= inc[0] * 0.5)
-    signal[0] *= -1
-  if (Math.abs(pspommel.position.z) <= inc[2] * 0.5)
-    signal[1] *= -1
+  if (ended)
+    DLcurveTime = 0
 }
 
-function movePommel() {
+function moveSnitch() {
   app.get('snitch').position.copy(curve.getPointAt(curveTime += curveInc))
   if (Math.abs(curveTime - 0.9996) < 0.0005) {
     curveTime = 0
@@ -360,8 +411,6 @@ app.init = function (req) {
 function moveCamera() {
   let camera = controls.getObject()
 
-  app.get('witch').rotateY(0.01)
-
   if (KeyboardMove.keys.Hm)
     app.init()
 
@@ -372,7 +421,7 @@ function moveCamera() {
   velocity.z -= velocity.z * 10.0 * delta
 
   //velocity.y -= 9.8 * 10.0 * delta
-  if (KeyboardMove.keys.W) velocity.z -= startSpeed * delta * Math.max(1, sft * 3)
+  if (KeyboardMove.keys.W) velocity.z -= startSpeed * delta * Math.max(1, sft * 60)
   if (KeyboardMove.keys.S) velocity.z += startSpeed * delta
   if (KeyboardMove.keys.A) velocity.x -= startSpeed * delta
   if (KeyboardMove.keys.D) velocity.x += startSpeed * delta

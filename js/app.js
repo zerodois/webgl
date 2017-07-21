@@ -302,16 +302,3 @@ APP.prototype.bottom = function () {
   let mesh = new THREE.Mesh(geometry, material)
   this.scene.add(mesh)
 }
-
-// Create Pseudo-Pommel
-APP.prototype.sphere = function (callback) {
-  let geometry = new THREE.SphereGeometry(1, 6, 6)
-  let material = new THREE.MeshBasicMaterial({
-    color: 0x000000
-  })
-  let obj = new THREE.Mesh(geometry, material)
-  if (callback != undefined)
-    callback(obj)
-  this.scene.add(obj)
-  // obj.add(sound)
-}
