@@ -21,13 +21,6 @@ function atualize (percent) {
   }
 }
 
-let deerLights = []
-let iDLightsPos = []
-let fDLightsPos = []
-let curvesDLight = []
-
-createDeerLights()
-
 let initialBCP = new THREE.Vector3(randCoordinate(20), 40, randCoordinate(20))
 let finalBCP
 
@@ -220,7 +213,15 @@ function randDLightVec() {
   return new THREE.Vector3(5900 + randDLightCoord(), 1070 + randDLightCoord(true), 100 + randDLightCoord())
 }
 
+let hasDeerLights = false
+let deerLights = []
+let iDLightsPos = []
+let fDLightsPos = []
+let curvesDLight = []
+
 function createDeerLights() {
+  hasDeerLights = true
+
   function createLight(color) {
     var pointLight = new THREE.PointLight(color, 0.8, 300)
     var geometry = new THREE.SphereGeometry(2, 24, 12)
@@ -234,7 +235,7 @@ function createDeerLights() {
     return pointLight
   }
 
-  let numLights = 3
+  let numLights = 5
   while (numLights--) {
     let pointLight = createLight(0x5555ff)
     let pos = randDLightVec()
@@ -318,20 +319,23 @@ function getCheat() {
   switch(cheat) {
     case 'super sprint':
       superSprint = true
-      break;
+      break
     case 'normal sprint':
       superSprint = false
-      break;
+      break
     case 'stop snitch':
       stopSnitch = true
-      break;
+      break
     case 'play snitch':
       stopSnitch = false
-      break;
+      break
+    case 'enable lights':
+      createDeerLights()
+      break
     case 'reset':
       superSprint = false
       stopSnitch = false
-      break;
+      break
   }
 }
 
@@ -361,7 +365,8 @@ app.draw(() => {
     soundsPlaying = true
   }
 
-  moveDLights()
+  if (hasDeerLights)
+    moveDLights()
   if (!stopSnitch)
     moveSnitch()
   moveCamera()
