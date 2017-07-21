@@ -24,7 +24,7 @@ function APP(WALLWIDTH, WALLHEIGHT) {
   this.setOnLoad = fn => this.loaderFn = fn
 
   // Camera listener
-  var listener = new THREE.AudioListener()
+  let listener = new THREE.AudioListener()
   this.camera.add(listener)
 
   //Loader manager
