@@ -58,8 +58,18 @@ app.json('models/golden-snitch/animation/golden-snitch')
 app.json('models/arms/arms')
   .skinning([0xE3B186, 0xE3B186])
   .after(character => {
+    let geometry = new THREE.SphereGeometry(2.5, 6, 6)
+    let material = new THREE.MeshBasicMaterial({
+      color: 0x000000
+    })
+    hand = new THREE.Mesh(geometry, material)
+    hand.position.setX(3).setY(0.5).setZ(-8)
+    hand.visible = false
+    character.add(hand)
+
     app.camera.add(character)
     character.translateX(0).translateZ(0).translateY(-6).scale.set(2, 2, 2)
+    character.rotateX(0.5)
     character.animation('rest').setLoop(THREE.LoopOnce, 0).play()
   })
   .load()
@@ -69,6 +79,7 @@ app.json('models/arms/broom')
   .after(function (b) {
     app.camera.add(b)
     b.translateX(0).translateZ(0).translateY(-6).scale.set(2, 2, 2)
+    b.rotateX(0.5)
   })
   .load()
 
@@ -79,12 +90,12 @@ app.sphere(obj => {
   pspommel = obj
 })
 
-app.arm(obj => {
-  arm = obj[0]
-  hand = obj[1]
-}, obj => {
-  obj.rotateX(Math.PI / 8).rotateZ(Math.PI / 20)
-})
+// app.arm(obj => {
+//     arm = obj[0]
+//     hand = obj[1]
+//   }, obj => {
+//     obj.rotateX(Math.PI / 8).rotateZ(Math.PI / 20)
+// })
 
 app.mtl('quiddich_stadium')
   .path('models/pitch/')
@@ -231,10 +242,6 @@ pointerlock.onError(() => {})
 controls = new THREE.PointerLockControls(app.camera)
 controls.getObject().position.copy(camStart)
 app.scene.add(controls.getObject())
-
-app.camera.add(arm)
-arm.translateX(2).translateY(-2.3)
-arm.visible = false
 
 app.scenario()
 KeyboardMove.aswd()
@@ -387,11 +394,11 @@ function moveCamera() {
   let handPos = new THREE.Vector3()
   handPos.setFromMatrixPosition(hand.matrixWorld)
 
-  if (armVisible && app.get('snitch').position.distanceTo(handPos) < 5) {
+  if (armVisible && app.get('snitch').position.distanceTo(handPos) < 5.5) {
     document.exitPointerLock();
     camera.position.copy(camStart)
     velocity.x = velocity.y = velocity.z = 0
-    arm.visible = false
+    // arm.visible = false
   }
 
   if (Math.abs(velocity.x * delta) > 1 || Math.abs(velocity.y * delta) > 1 ||
