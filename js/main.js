@@ -99,11 +99,11 @@ app.sphere(obj => {
 //     obj.rotateX(Math.PI / 8).rotateZ(Math.PI / 20)
 // })
 
-app.mtl('quiddich_stadium')
+app.mtl('quiddich_stadium_')
   .path('models/pitch/')
   .after(materials => {
     materials.preload();
-    app.obj('quiddich_stadium')
+    app.obj('quiddich_stadium_')
       .path('models/pitch/')
       .material(materials)
       .scale(10)
