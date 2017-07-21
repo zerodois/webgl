@@ -1,6 +1,5 @@
-let scenarioSize = 5000
-let scenarioHeight = 400
-let app = new APP(scenarioSize, scenarioHeight)
+let scenarioHeight = 1700
+let app = new APP()
 let controls
 let geometry, material, mesh
 let blocker = document.getElementById('blocker')
@@ -33,9 +32,7 @@ let curve = new THREE.CubicBezierCurve3(
 )
 
 let curveTime = 0
-let curveInc = 0.001
-
-app.obj('models/wolf').scale(0.05).load()
+let curveInc = 0.0002
 
 app.json('models/golden-snitch/animation/golden-snitch')
   .as('snitch')
@@ -120,7 +117,6 @@ app.png('models/witch/witch-fire').after(texture => {
 app.obj('models/deer')
   .scale(0.01)
   .before(obj => {
-    obj.position.setX(10)
     obj.ambient = new THREE.Vector3(0.2, 0.2, 1)
     obj.diffuse = new THREE.Vector3(0.7, 0.7, 0.7)
     obj.specular = new THREE.Vector3(0.6, 0.6, 0.6)
@@ -147,7 +143,7 @@ app.mp3('sounds/hedwig')
   .after(x => {
     app.camera.sound('music').position.setZ(1)
     sounds.push(app.camera.sound('music'))
-    app.camera.sound('music').setVolume(1)
+    app.camera.sound('music').setVolume(0.5)
     if (controlsEnabled)
       app.camera.sound('music').play()
   })
@@ -209,14 +205,22 @@ function shader(obj) {
 }
 
 function randCoordinate(range, lowerBound, pos) {
-  return (lowerBound || 0) + (range || scenarioSize / 3) * Math.random() *
+  return (lowerBound || 0) + (range || 12345) * Math.random() *
          (pos || Math.random() > 0.5 ? 1 : -1)
 }
 
 function randVec() {
-  return new THREE.Vector3(randCoordinate(),
-    randCoordinate(scenarioHeight-30, 30, true),
-    randCoordinate())
+  let y = randCoordinate(scenarioHeight - 30, 30, true)
+  let z = randCoordinate(12570)
+  
+  let temp = 29052100 * Math.pow(z, 2) / 158004900
+  while (29052100 - temp < 0.0001) {
+    z = randCoordinate()
+    temp = 29052100 * Math.pow(z, 2) / 158004900
+  }  
+  let x = randCoordinate(Math.sqrt(29052100 - temp))
+
+  return new THREE.Vector3(x, y, z)
 }
 
 let pointerlock = new Pointerlock()
@@ -368,7 +372,7 @@ function moveCamera() {
   velocity.z -= velocity.z * 10.0 * delta
 
   //velocity.y -= 9.8 * 10.0 * delta
-  if (KeyboardMove.keys.W) velocity.z -= startSpeed * delta * Math.max(1, sft * 60)
+  if (KeyboardMove.keys.W) velocity.z -= startSpeed * delta * Math.max(1, sft * 3)
   if (KeyboardMove.keys.S) velocity.z += startSpeed * delta
   if (KeyboardMove.keys.A) velocity.x -= startSpeed * delta
   if (KeyboardMove.keys.D) velocity.x += startSpeed * delta
@@ -440,7 +444,7 @@ function moveCamera() {
   let handPos = new THREE.Vector3()
   handPos.setFromMatrixPosition(hand.matrixWorld)
 
-  if (armVisible && app.get('snitch').position.distanceTo(handPos) < 5) {
+  if (armVisible && app.get('snitch').position.distanceTo(handPos) < 4.5) {
     app.init()
     app.camera.sound('win').play()
     document.querySelector('#win').classList.remove('none')

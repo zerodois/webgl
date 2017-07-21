@@ -1,4 +1,4 @@
-function APP(WALLWIDTH, WALLHEIGHT) {
+function APP() {
   // Scene
   this.scene = new THREE.Scene()
   this.clock = new THREE.Clock()
@@ -6,10 +6,6 @@ function APP(WALLWIDTH, WALLHEIGHT) {
   this.loaded = 0
   this.floor = 0
   this.mixer = []
-
-  // Wall
-  this.wallWidth = WALLWIDTH || 5000
-  this.wallHeight = WALLHEIGHT || 400
 
   // Camera
   let viewAngle = 75,
