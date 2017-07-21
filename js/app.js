@@ -40,10 +40,7 @@ function APP() {
 
   // Light
   this.light = new THREE.HemisphereLight(0xeeeeff, 0x777788, 1)
-  // this.light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 0.75 )
-  // this.light = new THREE.DirectionalLight( 0xff0000 )
   this.light.position.set(0.5, 1, 0.75)
-  // this.light.position.set( 1, 0, 1 ).normalize()
   this.scene.add(this.light)
 
   //Directional Light
@@ -68,11 +65,7 @@ function APP() {
   let reflectionCube = new THREE.CubeTextureLoader(this.manager).load(urls)
   reflectionCube.format = THREE.RGBFormat
   this.scene.background = reflectionCube
-
-  // Axes lines
-  // let axes = new THREE.AxisHelper(100)
-  // this.scene.add( axes )
-
+  
   // Objects
   let objects = {'listener': listener}
   this.fn = () => {}
@@ -295,9 +288,9 @@ APP.prototype.bottom = function () {
     map: texture
   })
 
-  texture.anisotropy = 6
+  texture.anisotropy = 13
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping
-  texture.repeat.set(800, 800)
+  texture.repeat.set(500, 500)
 
   let mesh = new THREE.Mesh(geometry, material)
   this.scene.add(mesh)
