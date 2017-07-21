@@ -58,28 +58,30 @@ app.json('models/golden-snitch/animation/golden-snitch')
 app.json('models/arms/arms')
   .skinning([0xE3B186, 0xE3B186])
   .after(character => {
-    let geometry = new THREE.SphereGeometry(2.5, 6, 6)
+    arm = character
+    let geometry = new THREE.SphereGeometry(0)
     let material = new THREE.MeshBasicMaterial({
       color: 0x000000
     })
     hand = new THREE.Mesh(geometry, material)
     hand.position.setX(3).setY(0.5).setZ(-8)
     hand.visible = false
-    character.add(hand)
+    arm.add(hand)
 
-    app.camera.add(character)
-    character.translateX(0).translateZ(0).translateY(-6).scale.set(2, 2, 2)
-    character.rotateX(0.5)
-    character.animation('rest').setLoop(THREE.LoopOnce, 0).play()
+    app.camera.add(arm)
+    arm.translateX(0).translateZ(0).translateY(-6).scale.set(2, 2, 2)
+    arm.rotateX(0.2)
+    arm.animation('rest').setLoop(THREE.LoopOnce, 0).play()
   })
   .load()
 
 app.json('models/arms/broom')
   .skinning([0x6A3E25])
   .after(function (b) {
+    stick = b
     app.camera.add(b)
     b.translateX(0).translateZ(0).translateY(-6).scale.set(2, 2, 2)
-    b.rotateX(0.5)
+    b.rotateX(0.2)
   })
   .load()
 
@@ -328,6 +330,11 @@ let startSpeed = 800.00
 let maxCoord = [50.00, 4000.00/*450.00*/, 50.00]
 let animatingArm = false
 let armVisible = false
+var animatingSprint = false
+var sprintPosition = false
+
+let curVolume = 0.07, nextVolume
+let curInclination = 0.2, nextInclination
 
 app.init = function (req) {
   controls.getObject().position.copy(camStart)
@@ -375,13 +382,13 @@ function moveCamera() {
   else if (camera.position.y <= 60.00 && velocity.y < 0.0 || camera.position.y + 30.00 >= maxCoord[1] && velocity.y > 0.0)
     velocity.y *= 0.9
 
-  camera.translateX(velocity.x * delta);
-  camera.translateY(velocity.y * delta);
-  camera.translateZ(velocity.z * delta);
+  camera.translateX(velocity.x * delta)
+  camera.translateY(velocity.y * delta)
+  camera.translateZ(velocity.z * delta)
 
   if (camera.position.y < 30) {
-    velocity.y = 0;
-    camera.position.y = 30;
+    velocity.y = 0
+    camera.position.y = 30
   }
 
   if (MouseClick.right && !animatingArm && !armVisible) {
@@ -408,36 +415,57 @@ function moveCamera() {
     )
   }
 
+  let sprint = sft && KeyboardMove.keys.W
+  animateSprint(sprint ? 0.0 : 0.2)
+
   let handPos = new THREE.Vector3()
   handPos.setFromMatrixPosition(hand.matrixWorld)
 
-  if (armVisible && app.get('snitch').position.distanceTo(handPos) < 5.5) {
+  if (armVisible && app.get('snitch').position.distanceTo(handPos) < 5) {
     app.camera.sound('win').play()
     document.querySelector('#win').classList.remove('none')
     document.exitPointerLock()
     camera.position.copy(camStart)
     velocity.x = velocity.y = velocity.z = 0
-    // arm.visible = false
   }
 
   if (Math.abs(velocity.x * delta) > 1 || Math.abs(velocity.y * delta) > 1 ||
       Math.abs(velocity.z * delta) > 1)
-    fadeSound(sft ? 0.8 : 0.2)
+    fadeSound(sprint ? 0.8 : 0.2)
   else
     fadeSound(0.07)
 
   prevTime = time
 }
 
-let curVolume = 0.07, nextVolume
-
 function fadeSound(volume) {
   nextVolume = volume
 
   let diff = curVolume - nextVolume
   if (Math.abs(diff) > 0.009) {
-    curVolume += (diff > 0.00 ? -1 : 1) * (diff > 0.2 ? 0.03 : 0.01)
+    let inc = (diff > 0.00 ? -1 : 1) * (Math.abs(diff) > 0.2 ? 0.03 : 0.02)
+    if (inc < 0.00 && curVolume + inc < nextVolume ||
+        inc > 0.00 && curVolume + inc > nextVolume)
+      inc = nextVolume - curVolume
+
+    curVolume += inc
     app.camera.sound('wind').setVolume(curVolume)
+  }
+}
+
+function animateSprint(inclination) {
+  nextInclination = inclination
+
+  let diff = curInclination - nextInclination
+  if (Math.abs(diff) > 0.009) {
+    let inc = (diff > 0.00 ? -1 : 1) * (Math.abs(diff) > 0.1 ? 0.03 : 0.04)
+    if (inc < 0.00 && curInclination + inc < nextInclination ||
+        inc > 0.00 && curInclination + inc > nextInclination)
+      inc = nextInclination - curInclination
+
+    curInclination += inc
+    arm.rotateX(inc)
+    stick.rotateX(inc)
   }
 }
 
