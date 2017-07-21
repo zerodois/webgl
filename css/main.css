@@ -55,6 +55,13 @@ body {
   justify-content: center;
   transition: all 0.25s linear;
 }
+.screen h1 {
+  animation: swag .5s infinite alternate;
+}
+@keyframes swag {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.25); }
+}
 .screen .text {
   font-family: 'Roboto', sans-serif;
   font-weight: 300;

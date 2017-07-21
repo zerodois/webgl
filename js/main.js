@@ -157,6 +157,14 @@ app.mp3('sounds/hedwig')
   })
   .load()
 
+app.mp3('sounds/win')
+  .to(app.camera)
+  .after(x => {
+    app.camera.sound('win').position.setZ(1)
+    app.camera.sound('win').setVolume(1)
+  })
+  .load()
+
 function shader(obj) {
   let uniforms = THREE.UniformsUtils.merge([
     THREE.UniformsLib["lights"],
@@ -300,7 +308,6 @@ function movePseudoPommel() {
 }
 
 function movePommel() {
-  return false;
   app.get('snitch').position.copy(curve.getPointAt(curveTime += curveInc))
   if (Math.abs(curveTime - 0.9996) < 0.0005) {
     curveTime = 0
@@ -325,7 +332,9 @@ let armVisible = false
 app.init = function (req) {
   controls.getObject().position.copy(camStart)
   velocity.x = velocity.y = velocity.z = 0
+  sounds.forEach(s => s.stop())
   if (req) {
+    app.camera.sound('win').stop()
     pointerlock.request();
     document.querySelector('#win').classList.add('none')
   }
@@ -403,8 +412,9 @@ function moveCamera() {
   handPos.setFromMatrixPosition(hand.matrixWorld)
 
   if (armVisible && app.get('snitch').position.distanceTo(handPos) < 5.5) {
+    app.camera.sound('win').play()
     document.querySelector('#win').classList.remove('none')
-    document.exitPointerLock();
+    document.exitPointerLock()
     camera.position.copy(camStart)
     velocity.x = velocity.y = velocity.z = 0
     // arm.visible = false
