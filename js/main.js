@@ -340,9 +340,17 @@ app.init = function (req) {
   controls.getObject().position.copy(camStart)
   velocity.x = velocity.y = velocity.z = 0
   sounds.forEach(s => s.stop())
+
   soundsPlaying = false
+  animatingArm = false
+  armVisible = false
   curInclination = 0.2
   curVolume = 0.07
+  
+  app.get('arms').animation('rest').stop()
+  app.get('arms').animation('back').stop()
+  app.get('arms').animation('get').stop()
+  app.get('arms').animation('rest').play()
 }
 
 function moveCamera() {
