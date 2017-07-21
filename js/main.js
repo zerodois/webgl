@@ -92,17 +92,10 @@ app.sphere(obj => {
   pspommel = obj
 })
 
-// app.arm(obj => {
-//     arm = obj[0]
-//     hand = obj[1]
-//   }, obj => {
-//     obj.rotateX(Math.PI / 8).rotateZ(Math.PI / 20)
-// })
-
 app.mtl('quiddich_stadium')
   .path('models/pitch/')
   .after(materials => {
-    materials.preload();
+    materials.preload()
     app.obj('quiddich_stadium')
       .path('models/pitch/')
       .material(materials)
@@ -127,7 +120,7 @@ app.obj('models/deer')
   .scale(0.01)
   .before(obj => {
     obj.position.setX(10)
-    obj.ambient = new THREE.Vector3(0, 1, 0)
+    obj.ambient = new THREE.Vector3(0.2, 0.2, 1)
     obj.diffuse = new THREE.Vector3(0.7, 0.7, 0.7)
     obj.specular = new THREE.Vector3(0.6, 0.6, 0.6)
     obj.shininess = 100.0
@@ -200,7 +193,7 @@ function shader(obj) {
         value: obj.shininess
       }
     }
-  ]);
+  ])
 
   let material = new THREE.ShaderMaterial({
     uniforms: uniforms,
@@ -230,7 +223,7 @@ pointerlock.check(() => {}, err)
 
 document.exitPointerLock = document.exitPointerLock ||
   document.mozExitPointerLock ||
-  document.webkitExitPointerLock;
+  document.webkitExitPointerLock
 
 function err() {
   instructions.innerHTML = 'Your browser doesn\'t seem to support Pointer Lock API'
@@ -327,7 +320,7 @@ let prevTime = performance.now()
 let velocity = new THREE.Vector3()
 
 let startSpeed = 800.00
-let maxCoord = [50.00, 4000.00/*450.00*/, 50.00]
+let maxCoord = [50.00, 14000.00/*450.00*/, 50.00]
 let animatingArm = false
 let armVisible = false
 var animatingSprint = false
@@ -337,14 +330,18 @@ let curVolume = 0.07, nextVolume
 let curInclination = 0.2, nextInclination
 
 app.init = function (req) {
+  if (req) {
+    app.camera.sound('win').stop()
+    document.querySelector('#win').classList.add('none')
+    return true
+  }
+  
   controls.getObject().position.copy(camStart)
   velocity.x = velocity.y = velocity.z = 0
   sounds.forEach(s => s.stop())
-  if (req) {
-    app.camera.sound('win').stop()
-    pointerlock.request();
-    document.querySelector('#win').classList.add('none')
-  }
+  soundsPlaying = false
+  curInclination = 0.2
+  curVolume = 0.07
 }
 
 function moveCamera() {
@@ -353,7 +350,7 @@ function moveCamera() {
   app.get('witch').rotateY(0.01)
 
   if (KeyboardMove.keys.Hm)
-    app.init();
+    app.init()
 
   let time = performance.now()
   let delta = (time - prevTime) / 1000
@@ -362,7 +359,7 @@ function moveCamera() {
   velocity.z -= velocity.z * 10.0 * delta
 
   //velocity.y -= 9.8 * 10.0 * delta
-  if (KeyboardMove.keys.W) velocity.z -= startSpeed * delta * Math.max(1, sft * 3)
+  if (KeyboardMove.keys.W) velocity.z -= startSpeed * delta * Math.max(1, sft * 30)
   if (KeyboardMove.keys.S) velocity.z += startSpeed * delta
   if (KeyboardMove.keys.A) velocity.x -= startSpeed * delta
   if (KeyboardMove.keys.D) velocity.x += startSpeed * delta
@@ -383,7 +380,7 @@ function moveCamera() {
     velocity.y *= 0.9
 
   camera.translateX(velocity.x * delta)
-  camera.translateY(velocity.y * delta)
+  camera.translateY(velocity.y * delta*10)
   camera.translateZ(velocity.z * delta)
 
   if (camera.position.y < 30) {
@@ -422,11 +419,10 @@ function moveCamera() {
   handPos.setFromMatrixPosition(hand.matrixWorld)
 
   if (armVisible && app.get('snitch').position.distanceTo(handPos) < 5) {
+    app.init()
     app.camera.sound('win').play()
     document.querySelector('#win').classList.remove('none')
     document.exitPointerLock()
-    camera.position.copy(camStart)
-    velocity.x = velocity.y = velocity.z = 0
   }
 
   if (Math.abs(velocity.x * delta) > 1 || Math.abs(velocity.y * delta) > 1 ||
