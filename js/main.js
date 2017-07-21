@@ -234,7 +234,7 @@ function createDeerLights() {
     return pointLight
   }
 
-  let numLights = 20
+  let numLights = 3
   while (numLights--) {
     let pointLight = createLight(0x5555ff)
     let pos = randDLightVec()
@@ -304,8 +304,36 @@ controls.getObject().position.copy(camStart)
 app.scene.add(controls.getObject())
 
 app.scenario()
-KeyboardMove.aswd()
+KeyboardMove.aswd(getCheat)
 MouseClick.mclick()
+
+let superSprint = false
+let stopSnitch = false
+
+function getCheat() {
+  if (pointerlock.hasLock())
+    return false
+
+  let cheat = prompt('Type a cheat code:')
+  switch(cheat) {
+    case 'super sprint':
+      superSprint = true
+      break;
+    case 'normal sprint':
+      superSprint = false
+      break;
+    case 'stop snitch':
+      stopSnitch = true
+      break;
+    case 'play snitch':
+      stopSnitch = false
+      break;
+    case 'reset':
+      superSprint = false
+      stopSnitch = false
+      break;
+  }
+}
 
 let controlsEnabled = false
 
@@ -334,8 +362,10 @@ app.draw(() => {
   }
 
   moveDLights()
-  moveSnitch()
+  if (!stopSnitch)
+    moveSnitch()
   moveCamera()
+
 })
 
 let DLcurveTime = 0
@@ -421,7 +451,7 @@ function moveCamera() {
   velocity.z -= velocity.z * 10.0 * delta
 
   //velocity.y -= 9.8 * 10.0 * delta
-  if (KeyboardMove.keys.W) velocity.z -= startSpeed * delta * Math.max(1, sft * 60)
+  if (KeyboardMove.keys.W) velocity.z -= startSpeed * delta * Math.max(1, sft * (superSprint ? 30 : 3))
   if (KeyboardMove.keys.S) velocity.z += startSpeed * delta
   if (KeyboardMove.keys.A) velocity.x -= startSpeed * delta
   if (KeyboardMove.keys.D) velocity.x += startSpeed * delta
