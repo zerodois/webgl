@@ -15,7 +15,7 @@ function APP(WALLWIDTH, WALLHEIGHT) {
   let viewAngle = 75,
     aspectRatio = window.innerWidth / window.innerHeight,
     near = 0.4,
-    far = 20000
+    far = 27000
   this.camera = new THREE.PerspectiveCamera(viewAngle, aspectRatio, near, far)
   this.camera.updateProjectionMatrix()
   this.camera.position.z = 0
@@ -61,10 +61,9 @@ function APP(WALLWIDTH, WALLHEIGHT) {
   this.scene.add(this.directional)
 
   // Scene background
-  // http://www.custommapmakers.org/skyboxes.php
-  let imagePrefix = "images/background/hills2_"
-  let directions = ["rt", "lf", "up", "dn", "bk", "ft"]
-  let imageSuffix = ".png"
+  let imagePrefix = 'images/background/nottingham_'
+  let directions = ['rt', 'lf', 'up', 'dn', 'bk', 'ft']
+  let imageSuffix = '.png'
 
   let urls = []
   for (let i = 0; i < 6; i++)

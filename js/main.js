@@ -325,15 +325,25 @@ let armVisible = false
 var animatingSprint = false
 var sprintPosition = false
 
+let curVolume = 0.07, nextVolume
+let curInclination = 0.2, nextInclination
+
+app.init = function (req) {
+  controls.getObject().position.copy(camStart)
+  velocity.x = velocity.y = velocity.z = 0
+  if (req) {
+    pointerlock.request();
+    document.querySelector('#win').classList.add('none')
+  }
+}
+
 function moveCamera() {
   let camera = controls.getObject()
 
   app.get('witch').rotateY(0.01)
 
-  if (KeyboardMove.keys.Hm) {
-    camera.position.copy(camStart)
-    velocity.x = velocity.y = velocity.z = 0
-  }
+  if (KeyboardMove.keys.Hm)
+    app.init();
 
   let time = performance.now()
   let delta = (time - prevTime) / 1000
@@ -402,6 +412,7 @@ function moveCamera() {
   handPos.setFromMatrixPosition(hand.matrixWorld)
 
   if (armVisible && app.get('snitch').position.distanceTo(handPos) < 5) {
+    document.querySelector('#win').classList.remove('none')
     document.exitPointerLock();
     camera.position.copy(camStart)
     velocity.x = velocity.y = velocity.z = 0
@@ -416,19 +427,20 @@ function moveCamera() {
   prevTime = time
 }
 
-let curVolume = 0.07, nextVolume
-
 function fadeSound(volume) {
   nextVolume = volume
 
   let diff = curVolume - nextVolume
   if (Math.abs(diff) > 0.009) {
-    curVolume += (diff > 0.00 ? -1 : 1) * (Math.abs(diff) > 0.2 ? 0.03 : 0.02)
+    let inc = (diff > 0.00 ? -1 : 1) * (Math.abs(diff) > 0.2 ? 0.03 : 0.02)
+    if (inc < 0.00 && curVolume + inc < nextVolume ||
+        inc > 0.00 && curVolume + inc > nextVolume)
+      inc = nextVolume - curVolume
+
+    curVolume += inc
     app.camera.sound('wind').setVolume(curVolume)
   }
 }
-
-let curInclination = 0.2, nextInclination
 
 function animateSprint(inclination) {
   nextInclination = inclination
@@ -436,6 +448,10 @@ function animateSprint(inclination) {
   let diff = curInclination - nextInclination
   if (Math.abs(diff) > 0.009) {
     let inc = (diff > 0.00 ? -1 : 1) * (Math.abs(diff) > 0.1 ? 0.03 : 0.04)
+    if (inc < 0.00 && curInclination + inc < nextInclination ||
+        inc > 0.00 && curInclination + inc > nextInclination)
+      inc = nextInclination - curInclination
+
     curInclination += inc
     arm.rotateX(inc)
     stick.rotateX(inc)
