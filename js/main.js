@@ -300,6 +300,7 @@ function movePseudoPommel() {
 }
 
 function movePommel() {
+  return false;
   app.get('snitch').position.copy(curve.getPointAt(curveTime += curveInc))
   if (Math.abs(curveTime - 0.9996) < 0.0005) {
     curveTime = 0
@@ -321,9 +322,13 @@ let maxCoord = [50.00, 4000.00/*450.00*/, 50.00]
 let animatingArm = false
 let armVisible = false
 
-app.init = function () {
-  camera.position.copy(camStart)
+app.init = function (req) {
+  controls.getObject().position.copy(camStart)
   velocity.x = velocity.y = velocity.z = 0
+  if (req) {
+    pointerlock.request();
+    document.querySelector('#win').classList.add('none')
+  }
 }
 
 function moveCamera() {
@@ -332,7 +337,7 @@ function moveCamera() {
   app.get('witch').rotateY(0.01)
 
   if (KeyboardMove.keys.Hm)
-    init();
+    app.init();
 
   let time = performance.now()
   let delta = (time - prevTime) / 1000
@@ -398,6 +403,7 @@ function moveCamera() {
   handPos.setFromMatrixPosition(hand.matrixWorld)
 
   if (armVisible && app.get('snitch').position.distanceTo(handPos) < 5.5) {
+    document.querySelector('#win').classList.remove('none')
     document.exitPointerLock();
     camera.position.copy(camStart)
     velocity.x = velocity.y = velocity.z = 0
