@@ -148,7 +148,7 @@ APP.prototype.mp3 = function (url) {
       character.sound = index => index === undefined ? character.sounds : character.sounds[ index ]
       character.add(positional)
     })
-    return this;
+    return this
   }
   return this.global('mp3', loader, url)
     .add('to', to)
@@ -190,7 +190,7 @@ APP.prototype.json = function (url) {
       }
       return character
     }
-    return this;
+    return this
   }
   return this.global('json', loader, url)
     .add('skinning', mesh)
@@ -284,15 +284,11 @@ APP.prototype.render = function () {
 // Draw scenario
 APP.prototype.scenario = function () {
   this.bottom()
-  // this.wall(0, -this.wallWidth / 2, 0)
-  // this.wall(0, this.wallWidth / 2, Math.PI)
-  // this.wall(-this.wallWidth / 2, 0, Math.PI / 2)
-  // this.wall(this.wallWidth / 2, 0, -Math.PI / 2)
 }
 
 //Draw floor
 APP.prototype.bottom = function () {
-  let geometry = new THREE.PlaneGeometry(25000, 25000, 100, 100)
+  let geometry = new THREE.PlaneGeometry(30000, 30000, 100, 100)
   geometry.rotateX(-Math.PI / 2)
 
   let textureLoader = new THREE.TextureLoader(this.manager)
@@ -311,26 +307,6 @@ APP.prototype.bottom = function () {
   this.scene.add(mesh)
 }
 
-// Draw a wall
-APP.prototype.wall = function (x, z, angle) {
-  let geometry = new THREE.PlaneGeometry(this.wallWidth, this.wallHeight, 100, 100)
-  geometry.rotateY(angle)
-
-  let textureLoader = new THREE.TextureLoader(this.manager)
-  let texture = textureLoader.load('images/misc/wall.jpg')
-
-  let material = new THREE.MeshBasicMaterial({
-    map: texture
-  })
-
-  texture.wrapS = texture.wrapT = THREE.RepeatWrapping
-  texture.repeat.set(20, 2)
-
-  let mesh = new THREE.Mesh(geometry, material)
-  this.scene.add(mesh)
-  mesh.position.setX(x).setY(100).setZ(z)
-}
-
 // Create Pseudo-Pommel
 APP.prototype.sphere = function (callback) {
   let geometry = new THREE.SphereGeometry(1, 6, 6)
@@ -342,40 +318,4 @@ APP.prototype.sphere = function (callback) {
     callback(obj)
   this.scene.add(obj)
   // obj.add(sound)
-}
-
-// Create Pseudo-Arm
-APP.prototype.arm = function (callback, callback2) {
-  let obj = new THREE.Object3D()
-
-  let geometry = new THREE.BoxGeometry(1, 1, 10)
-  let material = new THREE.MeshBasicMaterial({
-    color: 0xA98765
-  })
-  obj.add(new THREE.Mesh(geometry, material))
-
-  geometry = new THREE.BoxGeometry(1.8, 0.5, 3)
-  material = new THREE.MeshBasicMaterial({
-    color: 0xA98775
-  })
-  let hand = new THREE.Object3D()
-  hand.add(new THREE.Mesh(geometry, material))
-
-  geometry = new THREE.BoxGeometry(1.4, 0.5, 0.5)
-
-  let finger = new THREE.Mesh(geometry, material)
-  finger.position.setX(-1.5).setZ(1)
-  hand.add(finger)
-
-  hand.position.setZ(-6)
-  obj.add(hand)
-
-  if (callback != undefined)
-    callback([obj, hand])
-  this.scene.add(obj)
-  if (callback2 != undefined)
-    callback2(obj)
-
-  hand.rotateX(Math.PI / 6).rotateZ(-Math.PI / 6).translateY(0.5).translateX(-0.3)
-  finger.rotateY(-Math.PI / 4).rotateZ(Math.PI / 8).translateZ(-0.6).translateX(-0.3)
 }
