@@ -314,15 +314,18 @@ var maxCoord = [50.00, 4000.00/*450.00*/, 50.00]
 var animatingArm = false
 var armVisible = false
 
+app.init = function () {
+  camera.position.copy(camStart)
+  velocity.x = velocity.y = velocity.z = 0
+}
+
 function moveCamera() {
   var camera = controls.getObject()
 
   app.get('witch').rotateY(0.01)
 
-  if (KeyboardMove.keys.Hm) {
-    camera.position.copy(camStart)
-    velocity.x = velocity.y = velocity.z = 0
-  }
+  if (KeyboardMove.keys.Hm)
+    init();
 
   var time = performance.now()
   var delta = (time - prevTime) / 1000

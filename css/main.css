@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto:300');
+
 html, body {
   width: 100%;
   height: 100%;
@@ -34,10 +36,10 @@ body {
   cursor: pointer;
 }
 
-#loading.hide {
+.screen.hide {
   opacity: 0;
 }
-#loading {
+.screen {
   --primary: #F4D03F;
   --secondary: black;
   position: absolute;
@@ -51,10 +53,27 @@ body {
   justify-content: center;
   transition: all 0.25s linear;
 }
-
-#loading i {
+.screen .text {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 300;
+  font-size: 2rem;
+}
+.none {
+  display: none !important
+}
+.screen span {
+  display: block;
+  cursor: pointer;
+  opacity: 0.7;
+  font-size: 1.5rem !important;
+  margin-top: -0.4rem;
+}
+.screen span:hover {
+  opacity: 1;
+}
+.screen i {
   height: 40%;
-  font-size: 15rem;
+  font-size: 14rem;
   color: var(--secondary);
 }
 #bar {
