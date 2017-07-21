@@ -101,7 +101,7 @@ app.mtl('quiddich_stadium')
       .material(materials)
       .scale(10)
       .after(obj => {
-        obj.position.setY(-1200)
+        obj.position.setX(100).setY(-1200).setZ(-260)
         obj.rotateY(1.035)
       })
       .load()
@@ -368,7 +368,7 @@ function moveCamera() {
   velocity.z -= velocity.z * 10.0 * delta
 
   //velocity.y -= 9.8 * 10.0 * delta
-  if (KeyboardMove.keys.W) velocity.z -= startSpeed * delta * Math.max(1, sft * 3)
+  if (KeyboardMove.keys.W) velocity.z -= startSpeed * delta * Math.max(1, sft * 60)
   if (KeyboardMove.keys.S) velocity.z += startSpeed * delta
   if (KeyboardMove.keys.A) velocity.x -= startSpeed * delta
   if (KeyboardMove.keys.D) velocity.x += startSpeed * delta
@@ -388,9 +388,22 @@ function moveCamera() {
   else if (camera.position.y <= 60.00 && velocity.y < 0.0 || camera.position.y + 30.00 >= maxCoord[1] && velocity.y > 0.0)
     velocity.y *= 0.9
 
-  camera.translateX(velocity.x * delta)
+  let incX = velocity.x * delta
+  let incZ = velocity.z * delta
+  camera.translateX(incX)
+  camera.translateZ(incZ)
+
+  if (!insideEllipsis(camera.position.x, camera.position.z)) {
+    camera.translateX(-1.1 * incX)
+    camera.translateZ(-1.1 * incZ)
+    
+    if (!insideEllipsis(camera.position.x, camera.position.z)) {
+      camera.translateX(0.1 * incX)
+      camera.translateZ(0.1 * incZ)
+    } 
+  }
+
   camera.translateY(velocity.y * delta)
-  camera.translateZ(velocity.z * delta)
 
   if (camera.position.y < 30) {
     velocity.y = 0
@@ -441,6 +454,10 @@ function moveCamera() {
     fadeSound(0.07)
 
   prevTime = time
+}
+
+function insideEllipsis(x, z) {
+  return Math.pow(z,2) / 158004900 + Math.pow(x,2) / 29052100 - 1 < 0.0001
 }
 
 function fadeSound(volume) {
