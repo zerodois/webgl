@@ -288,7 +288,7 @@ APP.prototype.scenario = function () {
 
 //Draw floor
 APP.prototype.bottom = function () {
-  let geometry = new THREE.PlaneGeometry(25000, 25000, 100, 100)
+  let geometry = new THREE.PlaneGeometry(30000, 30000, 100, 100)
   geometry.rotateX(-Math.PI / 2)
 
   let textureLoader = new THREE.TextureLoader(this.manager)

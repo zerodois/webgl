@@ -102,6 +102,7 @@ app.mtl('quiddich_stadium')
       .scale(10)
       .after(obj => {
         obj.position.setY(-1200)
+        obj.rotateY(1.035)
       })
       .load()
   })
@@ -320,7 +321,7 @@ let prevTime = performance.now()
 let velocity = new THREE.Vector3()
 
 let startSpeed = 800.00
-let maxCoord = [50.00, 14000.00/*450.00*/, 50.00]
+let maxCoord = [50.00, 1700.00, 50.00]
 let animatingArm = false
 let armVisible = false
 var animatingSprint = false
@@ -359,7 +360,7 @@ function moveCamera() {
   velocity.z -= velocity.z * 10.0 * delta
 
   //velocity.y -= 9.8 * 10.0 * delta
-  if (KeyboardMove.keys.W) velocity.z -= startSpeed * delta * Math.max(1, sft * 30)
+  if (KeyboardMove.keys.W) velocity.z -= startSpeed * delta * Math.max(1, sft * 3)
   if (KeyboardMove.keys.S) velocity.z += startSpeed * delta
   if (KeyboardMove.keys.A) velocity.x -= startSpeed * delta
   if (KeyboardMove.keys.D) velocity.x += startSpeed * delta
@@ -380,13 +381,15 @@ function moveCamera() {
     velocity.y *= 0.9
 
   camera.translateX(velocity.x * delta)
-  camera.translateY(velocity.y * delta*10)
+  camera.translateY(velocity.y * delta)
   camera.translateZ(velocity.z * delta)
 
   if (camera.position.y < 30) {
     velocity.y = 0
     camera.position.y = 30
   }
+
+  console.log(camera.position)
 
   if (MouseClick.right && !animatingArm && !armVisible) {
     animatingArm = true
