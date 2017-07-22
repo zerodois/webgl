@@ -98,6 +98,24 @@ app.mtl('quiddich_stadium')
   })
   .load()
 
+app.mtl('wand')
+  .path('models/wand/')
+  .after(materials => {
+    materials.preload()
+    app.obj('wand')
+      .as('wand')
+      .path('models/wand/')
+      .material(materials)
+      .scale(2)
+      .after(obj => {
+        obj.position.setX(12).setY(5.5).setZ(-10)
+        app.camera.add(obj)
+        obj.visible = false
+      })
+      .load()
+  })
+  .load()
+
 app.png('models/witch/witch-fire').after(texture => {
   app.obj('models/witch/witch')
     .scale(20)
@@ -329,6 +347,12 @@ function getCheat() {
     case 'play snitch':
       stopSnitch = false
       break
+    case 'enable wand':
+      app.get('wand').visible = true
+      break
+    case 'disable wand':
+      app.get('wand').visible = false
+      break
     case 'enable lights':
       createDeerLights()
       break
@@ -541,7 +565,16 @@ function moveCamera() {
   else
     fadeSound(0.07)
 
+  let curvePoint = new THREE.Vector3()
+  curvePoint.setFromMatrixPosition(app.get('snitch').matrixWorld)
+  app.get('wand').lookAt( app.camera.worldToLocal( curvePoint ) );
+
   prevTime = time
+}
+
+THREE.Object3D.prototype.lookAtWorld = function(vector) {
+    this.parent.worldToLocal(vector)
+    this.lookAt(vector)
 }
 
 function insideEllipsis(x, z) {
