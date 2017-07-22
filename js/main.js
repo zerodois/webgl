@@ -32,7 +32,7 @@ let curve = new THREE.CubicBezierCurve3(
 )
 
 let curveTime = 0
-let curveInc = 0.0002
+let curveInc = 0.0006
 
 app.json('models/golden-snitch/animation/golden-snitch')
   .as('snitch')
@@ -456,7 +456,7 @@ function moveCamera() {
   velocity.z -= velocity.z * 10.0 * delta
 
   //velocity.y -= 9.8 * 10.0 * delta
-  if (KeyboardMove.keys.W) velocity.z -= startSpeed * delta * Math.max(1, sft * (superSprint ? 30 : 3))
+  if (KeyboardMove.keys.W) velocity.z -= startSpeed * delta * Math.max(1, sft * (superSprint ? 12 : 3))
   if (KeyboardMove.keys.S) velocity.z += startSpeed * delta
   if (KeyboardMove.keys.A) velocity.x -= startSpeed * delta
   if (KeyboardMove.keys.D) velocity.x += startSpeed * delta
@@ -476,8 +476,8 @@ function moveCamera() {
   else if (camera.position.y <= 60.00 && velocity.y < 0.0 || camera.position.y + 30.00 >= maxCoord[1] && velocity.y > 0.0)
     velocity.y *= 0.9
 
-  let incX = velocity.x * delta
-  let incZ = velocity.z * delta
+  let incX = velocity.x * delta * 3
+  let incZ = velocity.z * delta * 3
   camera.translateX(incX)
   camera.translateZ(incZ)
 
