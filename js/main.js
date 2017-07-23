@@ -354,7 +354,8 @@ function getCheat() {
       app.get('wand').visible = false
       break
     case 'enable lights':
-      createDeerLights()
+    if (!hasDeerLights)    
+        createDeerLights()
       break
     case 'reset':
       superSprint = false
@@ -479,8 +480,10 @@ function moveCamera() {
   velocity.x -= velocity.x * 10.0 * delta
   velocity.z -= velocity.z * 10.0 * delta
 
+  let sprintMultiplier = Math.max(1, sft * (superSprint ? 12 : 3))
+
   //velocity.y -= 9.8 * 10.0 * delta
-  if (KeyboardMove.keys.W) velocity.z -= startSpeed * delta * Math.max(1, sft * (superSprint ? 12 : 3))
+  if (KeyboardMove.keys.W) velocity.z -= startSpeed * delta * sprintMultiplier
   if (KeyboardMove.keys.S) velocity.z += startSpeed * delta
   if (KeyboardMove.keys.A) velocity.x -= startSpeed * delta
   if (KeyboardMove.keys.D) velocity.x += startSpeed * delta
@@ -515,7 +518,7 @@ function moveCamera() {
     } 
   }
 
-  camera.translateY(velocity.y * delta)
+  camera.translateY(velocity.y * delta * 1.5 * sprintMultiplier)
 
   if (camera.position.y < 30) {
     velocity.y = 0
@@ -570,11 +573,6 @@ function moveCamera() {
   app.get('wand').lookAt( app.camera.worldToLocal( curvePoint ) );
 
   prevTime = time
-}
-
-THREE.Object3D.prototype.lookAtWorld = function(vector) {
-    this.parent.worldToLocal(vector)
-    this.lookAt(vector)
 }
 
 function insideEllipsis(x, z) {
