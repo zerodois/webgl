@@ -109,6 +109,7 @@ app.mtl('wand')
       .scale(2)
       .after(obj => {
         obj.position.setX(12).setY(5.5).setZ(-10)
+        obj.rotateY(Math.PI)
         app.camera.add(obj)
         obj.visible = false
       })
