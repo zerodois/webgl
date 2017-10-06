@@ -31,8 +31,12 @@ let curve = new THREE.CubicBezierCurve3(
   finalBCP = randVec()
 )
 
+function getCurveInc(atCurve) {
+  return Math.max(1, Math.round( 11.2 * 100000 / atCurve.getLength() )) / 100000
+}
+
 let curveTime = 0
-let curveInc = 0.0006
+let curveInc = getCurveInc(curve)
 
 app.json('models/golden-snitch/animation/golden-snitch')
   .as('snitch')
@@ -111,7 +115,6 @@ app.mtl('wand')
         obj.position.setX(12).setY(5.5).setZ(-10)
         obj.rotateY(Math.PI)
         app.camera.add(obj)
-        obj.visible = false
       })
       .load()
   })
@@ -421,7 +424,7 @@ function moveDLights() {
 
 function moveSnitch() {
   app.get('snitch').position.copy(curve.getPointAt(curveTime += curveInc))
-  if (Math.abs(curveTime - 0.9996) < 0.0005) {
+  if (Math.abs(curveTime - 0.999) < 0.001) {
     curveTime = 0
     curve = new THREE.CubicBezierCurve3(
       inicialBCP = finalBCP,
@@ -429,6 +432,7 @@ function moveSnitch() {
       randVec(),
       finalBCP = randVec()
     )
+    curveInc = getCurveInc(curve)
   }
   app.get('snitch').lookAt(curve.getPointAt(curveTime + curveInc))
 }
@@ -555,8 +559,8 @@ function moveCamera() {
 
   let handPos = new THREE.Vector3()
   handPos.setFromMatrixPosition(hand.matrixWorld)
-
-  if (armVisible && app.get('snitch').position.distanceTo(handPos) < 4.5) {
+  console.log(app.get('snitch').position.distanceTo(handPos))
+  if (armVisible && app.get('snitch').position.distanceTo(handPos) < 10) {
     app.init()
     app.camera.sound('win').play()
     document.querySelector('#win').classList.remove('none')
