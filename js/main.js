@@ -559,7 +559,7 @@ function moveCamera() {
 
   let handPos = new THREE.Vector3()
   handPos.setFromMatrixPosition(hand.matrixWorld)
-  console.log(app.get('snitch').position.distanceTo(handPos))
+  
   if (armVisible && app.get('snitch').position.distanceTo(handPos) < 10) {
     app.init()
     app.camera.sound('win').play()
